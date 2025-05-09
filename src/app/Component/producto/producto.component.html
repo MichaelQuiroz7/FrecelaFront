@@ -1,0 +1,40 @@
+<!-- HEADER -->
+<header class="header">
+    <h1>Catálogo de Productos</h1>
+  </header>
+  
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="contenedor-galeria">
+    <!-- Galería de productos -->
+    <div class="productos-container">
+      <div
+        class="producto"
+        *ngFor="let producto of productos"
+        (click)="seleccionarProducto(producto)"
+      >
+        <h3>{{ producto.nombre }}</h3>
+        <p>{{ producto.descripcion }}</p>
+      </div>
+    </div>
+  
+    <!-- Panel lateral de detalles -->
+    <div
+      class="panel-detalles"
+      [ngStyle]="{
+        width: productoSeleccionado ? '40%' : '0%',
+        opacity: productoSeleccionado ? '1' : '0',
+        pointerEvents: productoSeleccionado ? 'auto' : 'none'
+      }"
+    >
+      <div *ngIf="productoSeleccionado" class="contenido-panel">
+        <h2>{{ productoSeleccionado.nombre }}</h2>
+        <img
+          [src]="productoSeleccionado.imagen"
+          alt="{{ productoSeleccionado.nombre }}"
+        />
+        <p>{{ productoSeleccionado.descripcion }}</p>
+        <button (click)="cerrarPanel()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+  

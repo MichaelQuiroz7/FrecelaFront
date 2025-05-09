@@ -1,0 +1,108 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  height: 15vh;
+  background-color: #004aad;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contenedor-galeria {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  transition: all 0.5s ease;
+}
+
+.galeria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  transition: width 0.5s ease;
+}
+
+.productos-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-content: flex-start;
+}
+
+
+.producto {
+  box-sizing: border-box;
+  width: 20%; /* o 24%, 22%, lo que decidas */
+  height: 200px;
+  min-width: 200px;
+  margin: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+
+
+
+.producto:hover {
+  transform: scale(1.05);
+}
+
+.producto img {
+  width: 0%;
+  height: 75px;
+  object-fit: cover;
+}
+
+.panel-detalles {
+  background-color: #f5f5f5;
+  height: 100%;
+  transition: all 0.5s ease;
+  overflow: auto;
+}
+
+.contenido-panel {
+  padding: 20px;
+}
+
+.contenido-panel img {
+  width: 100%;
+  max-height: 100px;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #d33;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #a00;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

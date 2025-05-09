@@ -1,0 +1,38 @@
+<h2>Detalles que marcan, estilo que inspira </h2>
+<div class="container" id="container" >
+  <div class="form-container sign-up-container">
+  </div>
+  <div class="form-container sign-in-container">
+    <form [formGroup]="loginForm" (ngSubmit)="login()">
+      <h1>Iniciar Sesión</h1>
+      <div class="social-container">
+        <!-- <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+        <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a> -->
+      </div>
+      <input type="text" placeholder="Cédula" formControlName="cedula" />
+      <input type="password" placeholder="Contraseña" formControlName="contrasenia" />
+
+      <a href="#">Olvidaste tu Contraseña?</a>
+      <button type="submit">Ingresar</button>
+    </form>
+  </div>
+  <div class="overlay-container">
+    <div class="overlay">
+      <div class="overlay-panel overlay-left">
+        <h1>Welcome Back!</h1>
+        <p>Para mantenerse conectado con nosotros, inicie sesión con su información personal.</p>
+        <button class="ghost" id="signIn">Sign In</button>
+      </div>
+      <div class="overlay-panel overlay-right">
+        <h1> FRECELA </h1>
+        <img src="assets/logoFrecela.jpg" alt="FRECELA Logo" class="centered-image" />
+      </div>
+    </div>
+  </div>
+</div>
+<footer>
+  <p>
+    Trabajo Colaborativo Tesis <i class="fa fa-heart"></i> Nury Maoly Jungal Mora - Cindy Elizabeth Limones Ricaurte
+  </p>
+</footer>
