@@ -5,19 +5,103 @@ body, html {
 }
 
 .header {
-  height: 15vh;
-  background-color: #004aad;
+  margin: -10px;
+  display: flex;
+  height: 10vh;
+  background: -webkit-linear-gradient(to right, #264A6C, #264A6C);
+  background: linear-gradient(to right, #264A6C, #264A6C);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px;
 }
+
+.header h1 {
+  font-size: 2em;
+  margin-right: auto;
+  margin-left: 30px;
+} 
+
+.logo {
+  width: 100px;
+  height: 100%;
+}
+
+.filtrosBusqueda {
+  height: auto;
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 10px;
+  /* background-color: #f7f7f7; */
+  /* border: 1px solid #ddd; */
+  border-radius: 8px;
+  /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); */
+  position: relative;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  padding: 10px 20px;
+  background-color: #e3f2fd;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #264A6C;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 200px;
+  font-size: 12px;
+}
+
+.dropdown-toggle::after {
+  content: '▼';
+  margin-left: 10px;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 200px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  z-index: 1;
+  font-size: 14px;
+}
+
+.dropdown-menu a {
+  color: #333;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
 
 .contenedor-galeria {
   display: flex;
   width: 100%;
   height: 100%;
-  position: relative;
   overflow: hidden;
   font-family: Arial, sans-serif;
   transition: all 0.5s ease;
@@ -35,27 +119,63 @@ body, html {
 
 .productos-container {
   display: flex;
+  width: 100%;
   flex-wrap: wrap;
   gap: 10px;
-  justify-content: center;
-  align-content: flex-start;
+  justify-content: space-evenly;
+  overflow-y: auto; /* Allow scrolling for the product gallery */
+  padding: 20px;
 }
 
-
 .producto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
-  width: 20%; /* o 24%, 22%, lo que decidas */
-  height: 200px;
-  min-width: 200px;
+  width: 17%;
+  height: 150px;
+  min-width: 150px;
   margin: 10px;
   border: 1px solid #ccc;
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.producto:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.producto-imgSelec{
+  width: 50%;
+  height: 45%;
+  object-fit: contain;
+  border-radius: 20px;
+  border: 2px solid #000;
+  margin-bottom: 10px;
+}
+
+.producto h3 {
+  font-size: 15px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   text-align: center;
 }
 
+
+.producto h3 {
+  font-size: 15px;
+  margin: 10px 0 0 0;
+  margin-top: auto;
+}
 
 
 .producto:hover {
@@ -63,46 +183,141 @@ body, html {
 }
 
 .producto img {
-  width: 0%;
-  height: 75px;
-  object-fit: cover;
+  border: #264A6C;
+  width: 100%;
+  height: 60%;
+  object-fit: contain;
 }
 
+
 .panel-detalles {
+  display: flex;
   background-color: #f5f5f5;
   height: 100%;
   transition: all 0.5s ease;
   overflow: auto;
+  margin-top: -20px;
 }
 
 .contenido-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+  z-index: 10;
   padding: 20px;
+  font-family: Arial, sans-serif;
 }
 
-.contenido-panel img {
-  width: 100%;
+/* Título */
+.contenedor-titulo h2 {
+  font-size: 1.8em;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Imagen del producto */
+/* .contenedor-imagen img {
+  width: 75%;
   max-height: 100px;
-  object-fit: cover;
-  margin-bottom: 15px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 2px solid #000;
+  margin: 15px 0;
+} */
+
+/* Descripción del producto */
+.contenedor-descripcion p {
+  font-size: 1em;
+  line-height: 1.5;
+  margin-bottom: 10px;
 }
 
-button {
-  padding: 8px 16px;
+/* Contenedor de precio unitario y cantidad */
+.contenedor-precio-total {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Subcontenedor horizontal */
+.precio-cantidad-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Precio unitario */
+.precio-unitario p {
+  font-weight: bold;
+  font-size: 1em;
+  margin: 0;
+}
+
+/* Cantidad input */
+.seleccion-cantidad {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seleccion-cantidad label {
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.seleccion-cantidad input {
+  width: 80px;
+  padding: 5px 10px;
+  font-size: 1em;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Precio total */
+.precio-total p {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #264A6C;
+}
+
+/* Botones */
+.contenedor-botones {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 10px;
+}
+
+.contenedor-botones button {
+  flex: 1;
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 5px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.boton-asesor button {
+  background-color: #28a745;
+}
+
+.boton-asesor button:hover {
+  background-color: #218838;
+}
+
+.boton-cerrar button {
   background-color: #d33;
-  color: white;
-  border: none;
-  cursor: pointer;
 }
 
-button:hover {
+.boton-cerrar button:hover {
   background-color: #a00;
-}
-
-button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }

@@ -1,31 +1,30 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Producto } from '../Model/producto';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductosService {
 
-  //https://localhost:7077/api/Producto
-  //https://localhost:7077/api/Producto
-  //https://localhost:7077/api/Producto/4
-  //https://localhost:7077/api/Producto/4?idUsuario=2
-  //https://localhost:7077/api/Producto/4/stock?aumentar=false&cantidad=25
-  // "nombre": "Pulsera",
-  // "precio": 12,
-  // "descripcion": "Pulsera elegente",
-  // "stock": 250,
-  // "idTipoProducto": 2,
-  // "idTipoSubproducto": 2
-  ///
-  //
-  //
-  ///
-  //
-  //
-  //
+  private myAppUrl = environment.endpoint;
+  private myApiUrl = 'api/Producto';
+  private myApiUrlImage = 'api/Imagen'
 
+  constructor(private http: HttpClient) { }
 
+  getProductos(): Observable<any> {
+      return this.http.get(`${this.myAppUrl}${this.myApiUrl}`);
+  }
 
+  agregarProducto(producto: Producto): Observable<Producto> {
+    return this.http.post<Producto>(`${this.myAppUrl}${this.myApiUrl}`, producto);
+  }
 
-  constructor() { }
+  getImagenes(): Observable<any> {
+      return this.http.get(`${this.myAppUrl}${this.myApiUrlImage}`);
+  }
+
 }

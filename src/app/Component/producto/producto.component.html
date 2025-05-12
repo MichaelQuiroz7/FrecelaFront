@@ -1,40 +1,137 @@
+<!--
+  Este es el archivo HTML del componente de producto.
+  Aquí se define la estructura y el diseño de la interfaz de usuario.-->
+
 <!-- HEADER -->
 <header class="header">
-    <h1>Catálogo de Productos</h1>
-  </header>
-  
-  <!-- CONTENEDOR PRINCIPAL -->
-  <div class="contenedor-galeria">
-    <!-- Galería de productos -->
-    <div class="productos-container">
-      <div
-        class="producto"
-        *ngFor="let producto of productos"
-        (click)="seleccionarProducto(producto)"
+  <h1>Catálogo de Productos</h1>
+  <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
+</header>
+
+<div class="filtrosBusqueda">
+  <!-- Filtro Tipo Producto -->
+  <div class="dropdown">
+    <button class="dropdown-toggle">
+      {{ selectedTipo?.nombreTipo || "Selecciona Tipo" }}
+    </button>
+    <div class="dropdown-menu">
+      <a
+        href="#"
+        class="dropdown-item"
+        *ngFor="let tipo of TipoProducto"
+        (click)="selectTipo(tipo); filtrar(); $event.preventDefault()"
       >
-        <h3>{{ producto.nombre }}</h3>
-        <p>{{ producto.descripcion }}</p>
-      </div>
+        {{ tipo.nombreTipo }}
+      </a>
     </div>
-  
-    <!-- Panel lateral de detalles -->
+  </div>
+
+  <!-- Filtro Subtipo Producto -->
+  <div class="dropdown">
+    <button class="dropdown-toggle">
+      {{ selectedSubproducto?.nombreSubtipo || "Selecciona Subtipo" }}
+    </button>
+    <div class="dropdown-menu">
+      <a
+        href="#"
+        class="dropdown-item"
+        *ngFor="let subtipo of TipoSubproducto"
+        (click)="selectSubproducto(subtipo); filtrar(); $event.preventDefault()"
+      >
+        {{ subtipo.nombreSubtipo }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Botón para limpiar filtros -->
+  <button
+    *ngIf="selectedTipo || selectedSubproducto"
+    (click)="limpiarFiltros()"
+  >
+    Limpiar Filtros ✖
+  </button>
+</div>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="contenedor-galeria">
+  <!-- Galería de productos -->
+  <div class="productos-container">
     <div
-      class="panel-detalles"
-      [ngStyle]="{
-        width: productoSeleccionado ? '40%' : '0%',
-        opacity: productoSeleccionado ? '1' : '0',
-        pointerEvents: productoSeleccionado ? 'auto' : 'none'
-      }"
+      class="producto"
+      *ngFor="let producto of productos"
+      (click)="seleccionarProducto(producto)"
     >
-      <div *ngIf="productoSeleccionado" class="contenido-panel">
+      <img
+        [src]="obtenerImagenDeProducto(producto.idProducto)"
+        alt="{{ producto.nombre }}"
+        class="producto-img"
+      />
+
+      <h3 class="productName">{{ producto.nombre }}</h3>
+    </div>
+  </div>
+
+  <!-- Panel lateral de detalles -->
+  <div
+    class="panel-detalles"
+    [ngStyle]="{
+      width: productoSeleccionado ? '40%' : '0%',
+      opacity: productoSeleccionado ? '1' : '0',
+      pointerEvents: productoSeleccionado ? 'auto' : 'none'
+    }"
+  >
+    <div *ngIf="productoSeleccionado" class="contenido-panel">
+      <!-- Contenedor 1: Título -->
+      <div class="contenedor-titulo">
         <h2>{{ productoSeleccionado.nombre }}</h2>
-        <img
-          [src]="productoSeleccionado.imagen"
-          alt="{{ productoSeleccionado.nombre }}"
-        />
-        <p>{{ productoSeleccionado.descripcion }}</p>
-        <button (click)="cerrarPanel()">Cerrar</button>
+      </div>
+
+      <!-- Contenedor 2: Imagen -->
+
+      <img
+        [src]="obtenerImagenDeProducto(productoSeleccionado.idProducto)"
+        alt="{{ productoSeleccionado.nombre }}"
+        class="producto-imgSelec"
+      />
+      <!-- </div> -->
+
+      <!-- Contenedor 3: Descripción -->
+      <div class="contenedor-descripcion">
+        <p class="productDescription">{{ productoSeleccionado.descripcion }}</p>
+      </div>
+
+      <!-- Contenedor 4: Precio unitario, cantidad y total -->
+      <!-- <div class="contenedor-precio-total"> -->
+
+      <!-- Precio unitario -->
+      <div class="precio-unitario">
+        <p class="productPrecio">
+          Precio: {{ productoSeleccionado.precio | currency }}
+        </p>
+      </div>
+
+      <!-- Selección de cantidad -->
+      <div class="seleccion-cantidad">
+        <label for="cantidad">Cantidad:</label>
+        <input type="number" id="cantidad" [(ngModel)]="cantidad" min="1" />
+      </div>
+
+      <!-- </div> -->
+
+      <!-- Precio total calculado -->
+      <div class="precio-total">
+        <p>Total: {{ productoSeleccionado.precio * cantidad | currency }}</p>
+      </div>
+
+      <!-- Contenedor 5: Botones -->
+      <div class="contenedor-botones">
+        <div class="boton-asesor">
+          <button (click)="elegirAsesor()">Elegir asesor</button>
+        </div>
+        <div class="boton-cerrar">
+          <button (click)="cerrarPanel()">Cerrar</button>
+        </div>
       </div>
     </div>
   </div>
-  
+</div>
