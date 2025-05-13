@@ -135,3 +135,33 @@
     </div>
   </div>
 </div>
+
+
+<!-- Modal para seleccionar asesor (Popup) -->
+<div class="modal" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Seleccionar Asesor</h2>
+      <button class="modal-close" (click)="cerrarModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="empleados-container">
+        <div
+          class="empleado-card"
+          *ngFor="let empleado of empleados"
+          (click)="seleccionarAsesor(empleado)"
+        >
+          <h3>{{ empleado.nombres }} {{ empleado.apellidos }}</h3>
+          <p><strong>Cédula:</strong> {{ empleado.cedula }}</p>
+          <p><strong>Teléfono:</strong> {{ empleado.telefono || 'No disponible' }}</p>
+          <p><strong>Género:</strong> {{ empleado.genero }}</p>
+          <p><strong>Edad:</strong> {{ empleado.edad }}</p>
+          <button class="select-asesor-btn">Seleccionar</button>
+        </div>
+        <div *ngIf="empleados.length === 0" class="no-empleados">
+          <p>No hay asesores disponibles.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

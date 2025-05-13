@@ -1,3 +1,4 @@
+import { LoginService } from './../../Service/login.service';
 import { TipoProducto } from './../../Model/tipo-producto';
 import { TipoSubproducto } from './../../Model/tipo-sub-producto';
 import { CommonModule } from '@angular/common';
@@ -8,6 +9,7 @@ import { Imagen } from '../../Model/imagen';
 import { FormsModule, NgSelectOption } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TiposProductoService } from '../../Service/tipos-producto.service';
+import { Empleado, EmpleadoDTO } from '../../Model/empleado';
 
 @Component({
   selector: 'app-producto',
@@ -17,10 +19,10 @@ import { TiposProductoService } from '../../Service/tipos-producto.service';
   styleUrl: './producto.component.css',
 })
 export class ProductoComponent implements OnInit {
-  elegirAsesor() {
-    throw new Error('Method not implemented.');
-  }
+ 
 
+  showModal: boolean = false;
+  empleados: EmpleadoDTO[] = [];
   cantidad: number = 1;
 
   productos: Producto[] = [];
@@ -43,7 +45,9 @@ export class ProductoComponent implements OnInit {
     idTipoSubproducto: 0,
   };
 
-  constructor(private productosService: ProductosService, private tiposProductoService: TiposProductoService) {}
+  constructor(private productosService: ProductosService, private tiposProductoService: TiposProductoService,
+    private LoginService: LoginService
+  ) {}
   ngOnInit(): void {
     this.obtenerProductos();
     this.obtenerImagenes();
@@ -179,6 +183,69 @@ limpiarFiltros(): void {
   this.obtenerProductos(); // Recupera todos los productos sin filtros
 }
 
+obtenerEmpleados(): void {
+    this.LoginService.getEmpleados().subscribe({
+      next: (response: any) => {
+        this.empleados = response.data;
+        console.log('Empleados response:', response.data);
+        
+      },
+      error: (error) => {
+        console.error('Error al obtener los empleados:', error);
+      },
+    });
+    console.log('Empleados list:', this.empleados);
+  }
+
+
+  elegirAsesor(): void {
+    this.showModal = true;
+    this.obtenerEmpleados();
+  }
+
+  cerrarModal(): void {
+    this.showModal = false;
+    this.empleados = [];
+  }
+
+  // Abrir el chat de WhatsApp con el número de teléfono del asesor seleccionado y los detalles del producto.
+  seleccionarAsesor(empleado: EmpleadoDTO): void {
+    if (!this.productoSeleccionado) {
+      console.error('No hay producto seleccionado');
+      this.cerrarModal();
+      return;
+    }
+
+    let phone = empleado.telefono?.replace(/[\s-]/g, '') || '';
+    if (phone && !phone.startsWith('+')) {
+      phone = '+593' + phone; // código de país para Ecuador
+    }
+
+    // Formatear los detalles del producto para el mensaje de WhatsApp
+    const productoNombre = this.productoSeleccionado.nombre;
+    const precioUnitario = this.productoSeleccionado.precio.toFixed(2);
+    const cantidad = this.cantidad;
+    const total = (this.productoSeleccionado.precio * this.cantidad).toFixed(2);
+
+    const mensaje = `Hola ${empleado.nombres}, estoy interesado en comprar:\n` +
+                    `Producto: ${productoNombre}\n` +
+                    `Precio unitario: $${precioUnitario}\n` +
+                    `Cantidad: ${cantidad}\n` +
+                    `Total: $${total}\n` +
+                    `Por favor, contáctame para coordinar.`;
+
+    // Codificar el mensaje para la URL
+    const mensajeEncoded = encodeURIComponent(mensaje);
+
+    // Construir la URL de WhatsApp
+    const whatsappUrl = `https://wa.me/${phone}?text=${mensajeEncoded}`;
+
+    // abrir el chat de WhatsApp en una nueva pestaña o ventana
+    window.open(whatsappUrl, '_blank');
+
+    console.log('Asesor seleccionado:', empleado);
+    this.cerrarModal();
+  }
 
 
 }
