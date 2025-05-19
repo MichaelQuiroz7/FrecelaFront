@@ -5,26 +5,62 @@ import { Observable } from 'rxjs';
 import { Producto } from '../Model/producto';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductosService {
-
   private myAppUrl = environment.endpoint;
   private myApiUrl = 'api/Producto';
-  private myApiUrlImage = 'api/Imagen'
+  private myApiUrlImage = 'api/Imagen';
+  private myApiUrl2 = 'stock';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getProductos(): Observable<any> {
-      return this.http.get(`${this.myAppUrl}${this.myApiUrl}`);
+    return this.http.get(`${this.myAppUrl}${this.myApiUrl}`);
   }
 
   agregarProducto(producto: Producto): Observable<Producto> {
-    return this.http.post<Producto>(`${this.myAppUrl}${this.myApiUrl}`, producto);
+    return this.http.post<Producto>(
+      `${this.myAppUrl}${this.myApiUrl}`,
+      producto
+    );
   }
 
   getImagenes(): Observable<any> {
-      return this.http.get(`${this.myAppUrl}${this.myApiUrlImage}`);
+    return this.http.get(`${this.myAppUrl}${this.myApiUrlImage}`);
   }
 
+  actualizarProducto(producto: Producto): Observable<Producto> {
+    return this.http.put<Producto>(
+      `${this.myAppUrl}${this.myApiUrl}/${producto.idProducto}`,
+      producto
+    );
+  }
+
+  eliminarProducto(idProducto: number, idrol: number): Observable<any> {
+  return this.http.delete<any>(
+    `${this.myAppUrl}${this.myApiUrl}/${idProducto}?idrol=${idrol}`
+  );
+}
+
+
+  actualizarStock(idProducto: number, aumentar: boolean, cantidad: number): Observable<any> {
+    const body = {
+      IdProducto: idProducto, 
+      aumentar: aumentar,
+      cantidad: cantidad
+    };
+    return this.http.put<any>(`${this.myAppUrl}${this.myApiUrl2}`, body);
+  }
+
+  crearProducto(producto: Producto): Observable<any> {
+    return this.http.post(`${this.myAppUrl}${this.myApiUrl}`, producto);
+  }
+
+  uploadImage(formData: FormData): Observable<any> {
+  return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagen`, formData);
+}
+
+
+  
 }

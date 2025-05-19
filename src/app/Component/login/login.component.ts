@@ -42,10 +42,10 @@ export class LoginComponent {
     this.loginService.login(credentials).subscribe({
       next: (response: any) => {
 
-        if (response) {
-          //localStorage.setItem('token', response.token);
+        if (response.data !== null) {
+          localStorage.setItem('token', response.data.idRol);
           console.log('Inicio de sesión exitoso', response);
-          this.router.navigate(['home']);
+          this.router.navigate(['producto-empleado']);
         } else {
           console.log(response.data);
           console.log('Error en el inicio de sesión: ', response.message);

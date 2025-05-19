@@ -1,0 +1,116 @@
+<!-- HEADER -->
+<header class="header">
+  <h1>Catálogo de Productos</h1>
+  <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
+</header>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="contenedor-galeria">
+  <!-- Galería de productos -->
+  <div class="productos-container">
+    <!-- Add Product Card -->
+    <div class="add-product-card" (click)="abrirModalAgregar()" *ngIf="userRole === '1'">
+      <span class="add-icon">+</span>
+      <span class="add-text">Añadir Producto</span>
+    </div>
+
+    <!-- Product Cards -->
+    <div class="producto" 
+         *ngFor="let producto of productos"
+         (click)="seleccionarProducto(producto)">
+      <img [src]="obtenerImagenDeProducto(producto.idProducto)" 
+           alt="{{ producto.nombre }}" 
+           class="producto-img" />
+      <h3 class="productName">{{ producto.nombre }}</h3>
+      <div class="producto-acciones">
+        <button class="edit-btn" 
+                (click)="abrirModalEditar(producto); $event.stopPropagation()">
+          ✏️
+        </button>
+        <button class="delete-btn" 
+                *ngIf="userRole === '1'"
+                (click)="confirmarEliminar(producto); $event.stopPropagation()">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral de detalles (unchanged) -->
+  <div class="panel-detalles" 
+       [ngStyle]="{
+         width: productoSeleccionado ? '40%' : '0%',
+         opacity: productoSeleccionado ? '1' : '0',
+         pointerEvents: productoSeleccionado ? 'auto' : 'none'
+       }">
+    <!-- Existing panel content -->
+  </div>
+</div>
+
+<!-- Modal para añadir producto -->
+<div class="modal" *ngIf="showAddModal" (click)="cerrarModalAgregar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Añadir Producto</h2>
+      <button class="modal-close" (click)="cerrarModalAgregar()">✖</button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input type="text" [(ngModel)]="nuevoProducto.nombre" name="nombre" />
+        </div>
+        <div class="form-group">
+          <label>Tipo de Producto:</label>
+          <div class="dropdown">
+            <button class="dropdown-toggle">
+              {{ selectedTipo?.nombreTipo || "Selecciona Tipo" }}
+            </button>
+            <div class="dropdown-menu">
+              <a href="#" class="dropdown-item"
+                 *ngFor="let tipo of TipoProducto"
+                 (click)="selectTipo(tipo); $event.preventDefault()">
+                {{ tipo.nombreTipo }}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Subtipo de Producto:</label>
+          <div class="dropdown">
+            <button class="dropdown-toggle">
+              {{ selectedSubproducto?.nombreSubtipo || "Selecciona Subtipo" }}
+            </button>
+            <div class="dropdown-menu">
+              <a href="#" class="dropdown-item"
+                 *ngFor="let subtipo of TipoSubproducto"
+                 (click)="selectSubproducto(subtipo); $event.preventDefault()">
+                {{ subtipo.nombreSubtipo }}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Precio:</label>
+          <input type="number" [(ngModel)]="nuevoProducto.precio" name="precio" />
+        </div>
+        <div class="form-group">
+          <label>Descripción:</label>
+          <textarea [(ngModel)]="nuevoProducto.descripcion" name="descripcion"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Stock:</label>
+          <input type="number" [(ngModel)]="nuevoProducto.stock" name="stock" />
+        </div>
+        <div class="form-group">
+          <label>Imagen:</label>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+        </div>
+        <button class="save-btn" (click)="guardarNuevoProducto()">Guardar</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Existing modals for editing and stock -->
+<!-- ... (keep your existing modals for edit and stock) ... -->
