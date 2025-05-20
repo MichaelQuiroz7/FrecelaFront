@@ -112,5 +112,115 @@
   </div>
 </div>
 
-<!-- Existing modals for editing and stock -->
-<!-- ... (keep your existing modals for edit and stock) ... -->
+<!-- Modal para editar producto -->
+<div class="modal" *ngIf="showEditModal" (click)="cerrarModalEditar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Producto</h2>
+      <button class="modal-close" (click)="cerrarModalEditar()">✖</button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input type="text" [(ngModel)]="productoEditado.nombre" name="nombre" />
+        </div>
+        <div class="form-group">
+          <label>Tipo de Producto:</label>
+          <div class="dropdown">
+            <button class="dropdown-toggle">
+              {{ selectedTipo?.nombreTipo || "Selecciona Tipo" }}
+            </button>
+            <div class="dropdown-menu">
+              <a href="#" class="dropdown-item"
+                 *ngFor="let tipo of TipoProducto"
+                 (click)="selectTipo(tipo); $event.preventDefault()">
+                {{ tipo.nombreTipo }}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Subtipo de Producto:</label>
+          <div class="dropdown">
+            <button class="dropdown-toggle">
+              {{ selectedSubproducto?.nombreSubtipo || "Selecciona Subtipo" }}
+            </button>
+            <div class="dropdown-menu">
+              <a href="#" class="dropdown-item"
+                 *ngFor="let subtipo of TipoSubproducto"
+                 (click)="selectSubproducto(subtipo); $event.preventDefault()">
+                {{ subtipo.nombreSubtipo }}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Precio:</label>
+          <input type="number" [(ngModel)]="productoEditado.precio" name="precio" />
+        </div>
+        <div class="form-group">
+          <label>Descripción:</label>
+          <textarea [(ngModel)]="productoEditado.descripcion" name="descripcion"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Stock:</label>
+          <input type="number" [(ngModel)]="productoEditado.stock" name="stock" />
+        </div>
+        <div class="form-group">
+          <label>Imagen:</label>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+        </div>
+        <button class="save-btn" (click)="guardarEdicion()">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para modificar stock -->
+<div class="modal" *ngIf="showStockModal" (click)="cerrarModalStock()">
+  <div class="modal-content stock-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ aumentarStock ? 'Aumentar Stock' : 'Registrar Venta' }}</h2>
+      <button class="modal-close" (click)="cerrarModalStock()">✖</button>
+    </div>
+    <div class="modal-body">
+      <h3>{{ productoSeleccionado?.nombre }}</h3>
+      <p>Stock actual: {{ productoSeleccionado?.stock }}</p>
+      <div class="form-group">
+        <label>Cantidad:</label>
+        <input type="number" [(ngModel)]="cantidadStock" name="cantidadStock" min="1" />
+      </div>
+      <button class="save-btn" (click)="confirmarStock()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel lateral de detalles -->
+<div class="panel-detalles" 
+     [ngStyle]="{
+       width: productoSeleccionado ? '40%' : '0%',
+       opacity: productoSeleccionado ? '1' : '0',
+       pointerEvents: productoSeleccionado ? 'auto' : 'none'
+     }">
+  <div class="contenido-panel">
+    <button class="panel-close-btn" (click)="cerrarPanel()">✖</button>
+    <div class="contenedor-titulo">
+      <h2>{{ productoSeleccionado?.nombre }}</h2>
+    </div>
+    <img [src]="obtenerImagenDeProducto(productoSeleccionado?.idProducto || 0)" 
+         alt="{{ productoSeleccionado?.nombre }}" 
+         class="producto-imgSelec" />
+    <div class="stock-info">
+      <p>Stock actual: {{ productoSeleccionado?.stock }}</p>
+    </div>
+    <div class="contenedor-botones">
+      <div class="boton-asesor">
+        <button (click)="abrirModalStock(true)">Aumentar Stock</button>
+      </div>
+      <div class="boton-cerrar">
+        <button (click)="abrirModalStock(false)">Registrar Venta</button>
+      </div>
+    </div>
+  </div>
+</div>
