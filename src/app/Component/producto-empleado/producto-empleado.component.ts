@@ -9,6 +9,7 @@ import { TipoProducto } from '../../Model/tipo-producto';
 import { TipoSubproducto } from '../../Model/tipo-sub-producto';
 import { TiposProductoService } from '../../Service/tipos-producto.service';
 import { LoginService } from '../../Service/login.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-producto-empleado',
@@ -19,9 +20,9 @@ import { LoginService } from '../../Service/login.service';
 })
 export class ProductoEmpleadoComponent {
   
-  showEditModal: boolean = false;
+   showEditModal: boolean = false;
   showStockModal: boolean = false;
-  showAddModal: boolean = false; 
+  showAddModal: boolean = false;
   productoEditado: Producto = {
     idProducto: 0,
     nombre: '',
@@ -40,11 +41,13 @@ export class ProductoEmpleadoComponent {
     idTipoProducto: 0,
     idTipoSubproducto: 0,
   };
-  selectedImage: File | null = null; 
+  selectedImage: File | null = null;
   cantidadStock: number = 1;
   aumentarStock: boolean = true;
   searchTerm: string = '';
   userRole: string | null = null;
+  nombre: string = '';
+  apellido: string = '';
 
   productos: Producto[] = [];
   imagenes: Imagen[] = [];
@@ -54,16 +57,18 @@ export class ProductoEmpleadoComponent {
   selectedSubproducto: { idTipoSubproducto: number; nombreSubtipo: string } | null = null;
   productoSeleccionado: Producto | null = null;
   cantidad: number = 1;
-  filtroNombre: string = '';
-productosFiltrados: Producto[] = [];
+  productosFiltrados: Producto[] = [];
 
   constructor(
     private productosService: ProductosService,
     private tiposProductoService: TiposProductoService,
-    private loginService: LoginService
+    private loginService: LoginService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.nombre = localStorage.getItem('nombre') || '';
+    this.apellido = localStorage.getItem('apellido') || '';
     this.obtenerProductos();
     this.obtenerImagenes();
     this.obtenerTiposProducto();
@@ -79,6 +84,7 @@ productosFiltrados: Producto[] = [];
     this.productosService.getProductos().subscribe({
       next: (response: any) => {
         this.productos = response.data.map((p: any) => ({ ...p }));
+        this.productosFiltrados = [...this.productos];
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
@@ -87,16 +93,23 @@ productosFiltrados: Producto[] = [];
   }
 
   buscarProductos(): void {
-    this.productosService.getProductos().subscribe({
-      next: (response: any) => {
-        this.productos = response.data.filter((p: Producto) =>
-          p.nombre.toLowerCase().includes(this.searchTerm.toLowerCase())
-        );
-      },
-      error: (error) => {
-        console.error('Error al buscar productos:', error);
-      },
-    });
+    if (this.searchTerm.trim() === '') {
+      this.productosFiltrados = [...this.productos];
+    } else {
+      this.productosFiltrados = this.productos.filter((p: Producto) =>
+        p.nombre.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+    }
+  }
+
+  limpiarBusqueda(): void {
+    this.searchTerm = '';
+    this.productosFiltrados = [...this.productos];
+  }
+
+  cerrarSesion(): void {
+    localStorage.clear();
+    this.router.navigate(['/login']);
   }
 
   obtenerImagenes(): void {
@@ -196,6 +209,9 @@ productosFiltrados: Producto[] = [];
         this.productos = this.productos.map((p) =>
           p.idProducto === this.productoEditado.idProducto ? { ...this.productoEditado } : p
         );
+        this.productosFiltrados = this.productosFiltrados.map((p) =>
+          p.idProducto === this.productoEditado.idProducto ? { ...this.productoEditado } : p
+        );
         this.cerrarModalEditar();
       },
       error: (error) => {
@@ -205,26 +221,25 @@ productosFiltrados: Producto[] = [];
   }
 
   confirmarEliminar(producto: Producto): void {
-  
-  if (confirm(`¿Está seguro de que desea eliminar el producto ${producto.nombre}?`)) {
-    this.userRole = localStorage.getItem('token');
-    const userRoleNumber = this.userRole ? Number(this.userRole) : null;
-    if (userRoleNumber === null || isNaN(userRoleNumber)) {
-      alert('No se pudo obtener el rol del usuario. Verifica si tienes permisos.');
-      return;
+    if (confirm(`¿Está seguro de que desea eliminar el producto ${producto.nombre}?`)) {
+      this.userRole = localStorage.getItem('token');
+      const userRoleNumber = this.userRole ? Number(this.userRole) : null;
+      if (userRoleNumber === null || isNaN(userRoleNumber)) {
+        alert('No se pudo obtener el rol del usuario. Verifica si tienes permisos.');
+        return;
+      }
+      this.productosService.eliminarProducto(producto.idProducto, userRoleNumber).subscribe({
+        next: () => {
+          this.productos = this.productos.filter((p) => p.idProducto !== producto.idProducto);
+          this.productosFiltrados = this.productosFiltrados.filter((p) => p.idProducto !== producto.idProducto);
+        },
+        error: (error) => {
+          console.error('Error al eliminar producto:', error);
+          alert('No se pudo eliminar el producto. Verifica si tienes permisos.');
+        },
+      });
     }
-    this.productosService.eliminarProducto(producto.idProducto, userRoleNumber).subscribe({
-      next: () => {
-        this.productos = this.productos.filter((p) => p.idProducto !== producto.idProducto);
-      },
-      error: (error) => {
-        console.error('Error al eliminar producto:', error);
-        alert('No se pudo eliminar el producto. Verifica si tienes permisos.');
-      },
-    });
   }
-}
-
 
   abrirModalStock(aumentar: boolean): void {
     this.aumentarStock = aumentar;
@@ -263,7 +278,7 @@ productosFiltrados: Producto[] = [];
         },
       });
   }
-  
+
   abrirModalAgregar(): void {
     this.nuevoProducto = {
       idProducto: 0,
@@ -304,51 +319,53 @@ productosFiltrados: Producto[] = [];
   }
 
   guardarNuevoProducto(): void {
-  if (!this.nuevoProducto.nombre || !this.nuevoProducto.idTipoProducto || !this.nuevoProducto.idTipoSubproducto) {
-    alert('Por favor, completa todos los campos requeridos.');
-    return;
+    if (!this.nuevoProducto.nombre || !this.nuevoProducto.idTipoProducto || !this.nuevoProducto.idTipoSubproducto) {
+      alert('Por favor, completa todos los campos requeridos.');
+      return;
+    }
+
+    this.productosService.crearProducto(this.nuevoProducto).subscribe({
+      next: (response: any) => {
+        const newProductId = response.data.idProducto;
+        const newProduct = { ...this.nuevoProducto, idProducto: newProductId };
+        this.productos.push(newProduct);
+        this.productosFiltrados.push(newProduct);
+
+        if (this.selectedImage) {
+          const formData = new FormData();
+          formData.append('Imagen', this.selectedImage);
+          formData.append('IdProducto', newProductId.toString());
+
+          this.productosService.uploadImage(formData).subscribe({
+            next: (imageResponse: any) => {
+              const imagePath = imageResponse.data.imagenUrl;
+              this.imagenes.push({
+                idImagen: imageResponse.data.idImagen,
+                idProducto: newProductId,
+                imagenUrl: imagePath,
+              });
+
+              this.obtenerProductos();
+              this.cerrarModalAgregar();
+            },
+            error: (error) => {
+              console.error('Error al subir la imagen:', error);
+              alert('Producto guardado, pero error al subir la imagen.');
+              this.cerrarModalAgregar();
+            },
+          });
+        } else {
+          this.cerrarModalAgregar();
+          this.obtenerProductos();
+        }
+      },
+      error: (error) => {
+        console.error('Error al crear producto:', error);
+        alert('Error al guardar el producto.');
+      },
+    });
   }
 
-  this.productosService.crearProducto(this.nuevoProducto).subscribe({
-    next: (response: any) => {
-      const newProductId = response.data.idProducto;
-      this.productos.push({ ...this.nuevoProducto, idProducto: newProductId });
-
-      // Subir imagen si está seleccionada
-      if (this.selectedImage) {
-        const formData = new FormData();
-        formData.append('Imagen', this.selectedImage); 
-        formData.append('IdProducto', newProductId.toString()); 
-
-        this.productosService.uploadImage(formData).subscribe({
-          next: (imageResponse: any) => {
-            const imagePath = imageResponse.data.imagenUrl;
-            this.imagenes.push({
-              idImagen: imageResponse.data.idImagen,
-              idProducto: newProductId,
-              imagenUrl: imagePath,
-            });
-
-            this.obtenerProductos();
-            this.cerrarModalAgregar();
-          },
-          error: (error) => {
-            console.error('Error al subir la imagen:', error);
-            alert('Producto guardado, pero error al subir la imagen.');
-            this.cerrarModalAgregar();
-          },
-        });
-      } else {
-        this.cerrarModalAgregar();
-        this.obtenerProductos();
-      }
-    },
-    error: (error) => {
-      console.error('Error al crear producto:', error);
-      alert('Error al guardar el producto.');
-    },
-  });
-}
 
 
 }

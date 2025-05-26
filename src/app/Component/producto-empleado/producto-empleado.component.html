@@ -4,6 +4,20 @@
   <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
 </header>
 
+<!-- Welcome Message and Logout Button -->
+<div class="welcome-container">
+  <h2>Bienvenido  {{ nombre }} {{ apellido }}</h2>
+  <button class="logout-btn" (click)="cerrarSesion()">Cerrar Sesión</button>
+</div>
+
+<!-- Search Filter -->
+<div class="search-container">
+  <div class="search-wrapper">
+    <input type="text" class="search-input" placeholder="Buscar por nombre..." [(ngModel)]="searchTerm" (input)="buscarProductos()" />
+    <button class="clear-search" *ngIf="searchTerm" (click)="limpiarBusqueda()">✖</button>
+  </div>
+</div>
+
 <!-- CONTENEDOR PRINCIPAL -->
 <div class="contenedor-galeria">
   <!-- Galería de productos -->
@@ -16,7 +30,7 @@
 
     <!-- Product Cards -->
     <div class="producto" 
-         *ngFor="let producto of productos"
+         *ngFor="let producto of productosFiltrados"
          (click)="seleccionarProducto(producto)">
       <img [src]="obtenerImagenDeProducto(producto.idProducto)" 
            alt="{{ producto.nombre }}" 
@@ -35,20 +49,10 @@
       </div>
     </div>
   </div>
-
-  <!-- Panel lateral de detalles (unchanged) -->
-  <div class="panel-detalles" 
-       [ngStyle]="{
-         width: productoSeleccionado ? '40%' : '0%',
-         opacity: productoSeleccionado ? '1' : '0',
-         pointerEvents: productoSeleccionado ? 'auto' : 'none'
-       }">
-    <!-- Existing panel content -->
-  </div>
 </div>
 
 <!-- Modal para añadir producto -->
-<div class="modal" *ngIf="showAddModal" (click)="cerrarModalAgregar()">
+<div class="modal add-product" *ngIf="showAddModal" (click)="cerrarModalAgregar()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Añadir Producto</h2>
@@ -113,7 +117,7 @@
 </div>
 
 <!-- Modal para editar producto -->
-<div class="modal" *ngIf="showEditModal" (click)="cerrarModalEditar()">
+<div class="modal edit-product" *ngIf="showEditModal" (click)="cerrarModalEditar()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Editar Producto</h2>
@@ -178,7 +182,7 @@
 </div>
 
 <!-- Modal para modificar stock -->
-<div class="modal" *ngIf="showStockModal" (click)="cerrarModalStock()">
+<div class="modal stock-modal" *ngIf="showStockModal" (click)="cerrarModalStock()">
   <div class="modal-content stock-modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ aumentarStock ? 'Aumentar Stock' : 'Registrar Venta' }}</h2>
@@ -196,30 +200,27 @@
   </div>
 </div>
 
-<!-- Panel lateral de detalles -->
-<div class="panel-detalles" 
-     [ngStyle]="{
-       width: productoSeleccionado ? '40%' : '0%',
-       opacity: productoSeleccionado ? '1' : '0',
-       pointerEvents: productoSeleccionado ? 'auto' : 'none'
-     }">
-  <div class="contenido-panel">
-    <button class="panel-close-btn" (click)="cerrarPanel()">✖</button>
-    <div class="contenedor-titulo">
+<!-- Modal para detalles de producto -->
+<div class="modal product-details" *ngIf="productoSeleccionado" (click)="cerrarPanel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
       <h2>{{ productoSeleccionado?.nombre }}</h2>
+      <button class="modal-close" (click)="cerrarPanel()">✖</button>
     </div>
-    <img [src]="obtenerImagenDeProducto(productoSeleccionado?.idProducto || 0)" 
-         alt="{{ productoSeleccionado?.nombre }}" 
-         class="producto-imgSelec" />
-    <div class="stock-info">
-      <p>Stock actual: {{ productoSeleccionado?.stock }}</p>
-    </div>
-    <div class="contenedor-botones">
-      <div class="boton-asesor">
-        <button (click)="abrirModalStock(true)">Aumentar Stock</button>
+    <div class="modal-body">
+      <img [src]="obtenerImagenDeProducto(productoSeleccionado?.idProducto || 0)" 
+           alt="{{ productoSeleccionado?.nombre }}" 
+           class="producto-imgSelec" />
+      <div class="stock-info">
+        <p>Stock actual: {{ productoSeleccionado?.stock }}</p>
       </div>
-      <div class="boton-cerrar">
-        <button (click)="abrirModalStock(false)">Registrar Venta</button>
+      <div class="contenedor-botones">
+        <div class="boton-asesor">
+          <button (click)="abrirModalStock(true)">Aumentar Stock</button>
+        </div>
+        <div class="boton-cerrar">
+          <button (click)="abrirModalStock(false)">Registrar Venta</button>
+        </div>
       </div>
     </div>
   </div>

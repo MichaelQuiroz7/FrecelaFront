@@ -44,6 +44,8 @@ export class LoginComponent {
 
         if (response.data !== null) {
           localStorage.setItem('token', response.data.idRol);
+          localStorage.setItem('nombre', response.data.nombres);
+          localStorage.setItem('apellido', response.data.apellidos);
           console.log('Inicio de sesión exitoso', response);
           this.router.navigate(['producto-empleado']);
         } else {
