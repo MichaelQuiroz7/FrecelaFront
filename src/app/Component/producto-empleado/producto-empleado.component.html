@@ -6,7 +6,7 @@
 
 <!-- Welcome Message and Logout Button -->
 <div class="welcome-container">
-  <h2>Bienvenido  {{ nombre }} {{ apellido }}</h2>
+  <h2>Bienvenido, {{ nombre }} {{ apellido }}</h2>
   <button class="logout-btn" (click)="cerrarSesion()">Cerrar Sesión</button>
 </div>
 
@@ -172,8 +172,21 @@
           <input type="number" [(ngModel)]="productoEditado.stock" name="stock" />
         </div>
         <div class="form-group">
-          <label>Imagen:</label>
-          <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+          <label>Imágenes Actuales:</label>
+          <div class="image-gallery">
+            <div class="image-container" *ngFor="let imagen of obtenerImagenesDeProducto(productoEditado.idProducto)">
+              <img [src]="imagen.imagenUrl" alt="Imagen del producto" class="producto-img" />
+              <button class="delete-image-btn" (click)="abrirModalConfirmarEliminarImagen(imagen.idImagen)">✖</button>
+            </div>
+            <div class="no-images" *ngIf="obtenerImagenesDeProducto(productoEditado.idProducto).length === 0">
+              No hay imágenes asociadas.
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Agregar Nueva Imagen:</label>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" multiple />
+          <button class="upload-btn" [disabled]="selectedImages.length === 0" (click)="subirImagenes(false)">Subir Imagen</button>
         </div>
         <button class="save-btn" (click)="guardarEdicion()">Guardar Cambios</button>
       </form>
@@ -204,15 +217,15 @@
 <div class="modal product-details" *ngIf="productoSeleccionado" (click)="cerrarPanel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ productoSeleccionado?.nombre }}</h2>
+      <h2>{{ productoSeleccionado.nombre }}</h2>
       <button class="modal-close" (click)="cerrarPanel()">✖</button>
     </div>
     <div class="modal-body">
-      <img [src]="obtenerImagenDeProducto(productoSeleccionado?.idProducto || 0)" 
-           alt="{{ productoSeleccionado?.nombre }}" 
+      <img [src]="obtenerImagenDeProducto(productoSeleccionado.idProducto || 0)" 
+           alt="{{ productoSeleccionado.nombre }}" 
            class="producto-imgSelec" />
       <div class="stock-info">
-        <p>Stock actual: {{ productoSeleccionado?.stock }}</p>
+        <p>Stock actual: {{ productoSeleccionado.stock }}</p>
       </div>
       <div class="contenedor-botones">
         <div class="boton-asesor">
@@ -221,6 +234,23 @@
         <div class="boton-cerrar">
           <button (click)="abrirModalStock(false)">Registrar Venta</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para confirmar eliminación de imagen (colocado al final para asegurar orden de apilamiento) -->
+<div class="modal confirm-delete-image" *ngIf="showConfirmDeleteImageModal" (click)="cerrarModalConfirmarEliminarImagen()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Confirmar Eliminación</h2>
+      <button class="modal-close" (click)="cerrarModalConfirmarEliminarImagen()">✖</button>
+    </div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas eliminar esta imagen?</p>
+      <div class="contenedor-botones">
+        <button class="save-btn" (click)="eliminarImagen()">Confirmar</button>
+        <button class="cancel-btn" (click)="cerrarModalConfirmarEliminarImagen()">Cancelar</button>
       </div>
     </div>
   </div>

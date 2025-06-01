@@ -1,0 +1,58 @@
+<div class="container" [ngClass]="{'right-panel-active': isRightPanelActive}" id="container">
+	<div class="form-container sign-up-container">
+		<form>
+			<h1>Crear Cuenta</h1>
+			<!-- <div class="social-container">
+				<a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+				<a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+				<a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+			</div> -->
+			<div class="message" [ngClass]="{'error-message': signUpMessage && signUpMessage.includes('Error'), 'success-message': signUpMessage && !signUpMessage.includes('Error')}" *ngIf="signUpMessage">{{ signUpMessage }}</div>
+			<input type="text" placeholder="Cedula" [(ngModel)]="cedula" name="cedula" />
+			<input type="text" placeholder="Nombres" [(ngModel)]="nombres" name="nombres" />
+			<input type="text" placeholder="Apellidos" [(ngModel)]="apellidos" name="apellidos" />
+			<input type="text" placeholder="Direccion" [(ngModel)]="direccion" name="direccion" />
+			<input type="email" placeholder="Correo Electronico" [(ngModel)]="correoElectronico" name="correoElectronico" />
+			<input type="password" placeholder="Clave" [(ngModel)]="clave" name="clave" />
+			<input type="tel" placeholder="Telefono" [(ngModel)]="telefono" name="telefono" />
+			<button type="button" (click)="registrarCliente()">Registrarse</button>
+		</form>
+	</div>
+	<div class="form-container sign-in-container">
+		<form>
+			<h1>Iniciar Sesión</h1>
+			<!-- <div class="social-container">
+				<a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+				<a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+				<a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+			</div> -->
+			<div class="message error-message" *ngIf="signInMessage">{{ signInMessage }}</div>
+			<input type="email" placeholder="Email" [(ngModel)]="correoElectronico" name="correoElectronico" />
+			<input type="password" placeholder="Password" [(ngModel)]="clave" name="clave" />
+			<!-- <a href="#">Forgot your password?</a> -->
+			<button type="button" (click)="login()">Ingresar</button>
+		</form>
+	</div>
+	<div class="overlay-container">
+		<div class="overlay">
+			<div class="overlay-panel overlay-left">
+				<h1>Bienvenido!</h1>
+                <img src="assets/logoFrecela.jpg" alt="FRECELA Logo" class="centered-image" />
+				<p>Si ya tienes una cuenta Inicia sesion con tu <strong>Correo</strong> y <strong>Contraseña</strong></p>
+				<button class="ghost" id="signIn" (click)="togglePanel()">Iniciar Sesión</button>
+			</div>
+			<div class="overlay-panel overlay-right">
+				<h1>Bienvenido a Frecela</h1>
+                <img src="assets/logoFrecela.jpg" alt="FRECELA Logo" class="centered-image" />
+				<p>Crea tu cuenta y descubre fabulosos <strong>Descuentos</strong>.</p>
+				<button class="ghost" id="signUp" (click)="togglePanel()">Registrarse</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<footer>
+  <p>
+    Trabajo Colaborativo Tesis <i class="fa fa-heart"></i> Nury Maoly Jungal Mora - Cindy Elizabeth Limones Ricaurte
+  </p>
+</footer>

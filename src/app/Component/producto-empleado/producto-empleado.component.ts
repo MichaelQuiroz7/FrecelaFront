@@ -20,9 +20,10 @@ import { Router } from '@angular/router';
 })
 export class ProductoEmpleadoComponent {
   
-   showEditModal: boolean = false;
+  showEditModal: boolean = false;
   showStockModal: boolean = false;
   showAddModal: boolean = false;
+  showConfirmDeleteImageModal: boolean = false;
   productoEditado: Producto = {
     idProducto: 0,
     nombre: '',
@@ -42,6 +43,8 @@ export class ProductoEmpleadoComponent {
     idTipoSubproducto: 0,
   };
   selectedImage: File | null = null;
+  selectedImages: File[] = [];
+  imagenIdToDelete: number | null = null;
   cantidadStock: number = 1;
   aumentarStock: boolean = true;
   searchTerm: string = '';
@@ -127,6 +130,15 @@ export class ProductoEmpleadoComponent {
     });
   }
 
+  obtenerImagenesDeProducto(idProducto: number): Imagen[] {
+    return this.imagenes.filter((i) => i.idProducto === idProducto);
+  }
+
+  obtenerImagenDeProducto(idProducto: number): string {
+    const img = this.imagenes.find((i) => i.idProducto === idProducto);
+    return img ? img.imagenUrl : 'assets/no-image.jpg';
+  }
+
   obtenerTiposProducto(): void {
     this.tiposProductoService.getTiposProduct().subscribe({
       next: (response: any) => {
@@ -176,15 +188,11 @@ export class ProductoEmpleadoComponent {
     this.cantidad = 1;
   }
 
-  obtenerImagenDeProducto(idProducto: number): string {
-    const img = this.imagenes.find((i) => i.idProducto === idProducto);
-    return img ? img.imagenUrl : 'assets/no-image.jpg';
-  }
-
   abrirModalEditar(producto: Producto): void {
     this.productoEditado = { ...producto };
     this.selectedTipo = this.TipoProducto.find((t) => t.idTipoProducto === producto.idTipoProducto) || null;
     this.selectedSubproducto = this.TipoSubproducto.find((s) => s.idTipoSubproducto === producto.idTipoSubproducto) || null;
+    this.selectedImages = [];
     this.showEditModal = true;
   }
 
@@ -192,6 +200,7 @@ export class ProductoEmpleadoComponent {
     this.showEditModal = false;
     this.selectedTipo = null;
     this.selectedSubproducto = null;
+    this.selectedImages = [];
     this.productoEditado = {
       idProducto: 0,
       nombre: '',
@@ -201,6 +210,77 @@ export class ProductoEmpleadoComponent {
       idTipoProducto: 0,
       idTipoSubproducto: 0,
     };
+  }
+
+  abrirModalConfirmarEliminarImagen(idImagen: number): void {
+    this.imagenIdToDelete = idImagen;
+    this.showConfirmDeleteImageModal = true;
+  }
+
+  cerrarModalConfirmarEliminarImagen(): void {
+    this.showConfirmDeleteImageModal = false;
+    this.imagenIdToDelete = null;
+  }
+
+  eliminarImagen(): void {
+    if (this.imagenIdToDelete === null) {
+      console.error('Error: No se seleccionó ninguna imagen para eliminar');
+      return;
+    }
+    this.productosService.eliminarImagen(this.imagenIdToDelete).subscribe({
+      next: () => {
+        this.imagenes = this.imagenes.filter((img) => img.idImagen !== this.imagenIdToDelete);
+        this.cerrarModalConfirmarEliminarImagen();
+      },
+      error: (error) => {
+        console.error('Error al eliminar la imagen:', error);
+        alert('Error al eliminar la imagen. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedImages = Array.from(input.files);
+    }
+  }
+
+  subirImagenes(isAddModal: boolean): void {
+    if (this.selectedImages.length === 0) {
+      alert('No hay imágenes seleccionadas para subir.');
+      return;
+    }
+
+    const idProducto = isAddModal ? this.nuevoProducto.idProducto : this.productoEditado.idProducto;
+
+    if (!idProducto && isAddModal) {
+      alert('Por favor, guarda el producto primero antes de subir imágenes.');
+      return;
+    }
+
+    const formData = new FormData();
+    this.selectedImages.forEach((image) => {
+      formData.append('Imagenes[]', image);
+    });
+    formData.append('IdProducto', idProducto.toString());
+
+    this.productosService.uploadImages(formData).subscribe({
+      next: (imageResponse: any) => {
+        const newImages = imageResponse.data.map((img: any) => ({
+          idImagen: img.idImagen,
+          idProducto: idProducto,
+          imagenUrl: img.imagenUrl,
+        }));
+        this.imagenes.push(...newImages);
+        this.selectedImages = [];
+        alert('Imágenes subidas exitosamente.');
+      },
+      error: (error) => {
+        console.error('Error al subir las imágenes:', error);
+        alert('Error al subir las imágenes. Por favor, intenta de nuevo.');
+      },
+    });
   }
 
   guardarEdicion(): void {
@@ -213,9 +293,11 @@ export class ProductoEmpleadoComponent {
           p.idProducto === this.productoEditado.idProducto ? { ...this.productoEditado } : p
         );
         this.cerrarModalEditar();
+        alert('Producto actualizado exitosamente.');
       },
       error: (error) => {
         console.error('Error al actualizar producto:', error);
+        alert('Error al actualizar el producto.');
       },
     });
   }
@@ -291,7 +373,7 @@ export class ProductoEmpleadoComponent {
     };
     this.selectedTipo = null;
     this.selectedSubproducto = null;
-    this.selectedImage = null;
+    this.selectedImages = [];
     this.showAddModal = true;
   }
 
@@ -308,14 +390,7 @@ export class ProductoEmpleadoComponent {
     };
     this.selectedTipo = null;
     this.selectedSubproducto = null;
-    this.selectedImage = null;
-  }
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedImage = input.files[0];
-    }
+    this.selectedImages = [];
   }
 
   guardarNuevoProducto(): void {
@@ -365,7 +440,6 @@ export class ProductoEmpleadoComponent {
       },
     });
   }
-
 
 
 }

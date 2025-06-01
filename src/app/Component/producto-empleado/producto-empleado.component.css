@@ -225,6 +225,52 @@ html {
   color: #a00;
 }
 
+.image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.image-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.delete-image-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  color: #d33;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.delete-image-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #a00;
+}
+
+.no-images {
+  color: #666;
+  font-style: italic;
+}
+
 .contenedor-botones {
   display: flex;
   justify-content: center;
@@ -341,6 +387,11 @@ html {
   z-index: 1200;
 }
 
+/* Confirm delete image modal */
+.modal.confirm-delete-image {
+  z-index: 1300;
+}
+
 .modal-content {
   background-color: white;
   border-radius: 12px;
@@ -385,6 +436,12 @@ html {
 .modal-body {
   padding: 20px;
   text-align: center;
+}
+
+.modal-body p {
+  font-size: 1.1em;
+  margin: 10px 0;
+  color: #333;
 }
 
 .stock-info p {
@@ -454,6 +511,44 @@ html {
   background-color: #1e3a55;
 }
 
+.upload-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.upload-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background-color: #d33;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #a00;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -517,5 +612,15 @@ html {
 
   .contenedor-galeria {
     min-height: calc(100vh - 220px);
+  }
+
+  .image-gallery {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .image-container {
+    width: 80px;
+    height: 80px;
   }
 }

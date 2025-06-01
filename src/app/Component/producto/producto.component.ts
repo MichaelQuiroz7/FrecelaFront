@@ -10,6 +10,7 @@ import { FormsModule, NgSelectOption } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TiposProductoService } from '../../Service/tipos-producto.service';
 import { Empleado, EmpleadoDTO } from '../../Model/empleado';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-producto',
@@ -20,20 +21,15 @@ import { Empleado, EmpleadoDTO } from '../../Model/empleado';
 })
 export class ProductoComponent implements OnInit {
  
-
-  showModal: boolean = false;
+showModal: boolean = false;
   empleados: EmpleadoDTO[] = [];
   cantidad: number = 1;
-
   productos: Producto[] = [];
   imagenes: Imagen[] = [];
-
   TipoProducto: TipoProducto[] = [];
   selectedTipo: { idTipoProducto: number; nombreTipo: string } | null = null;
-
   TipoSubproducto: TipoSubproducto[] = [];
   selectedSubproducto: { idTipoSubproducto: number; nombreSubtipo: string } | null = null;
-  
   productoSeleccionado: Producto | null = null;
   nuevoProducto: Producto = {
     idProducto: 0,
@@ -44,22 +40,37 @@ export class ProductoComponent implements OnInit {
     idTipoProducto: 0,
     idTipoSubproducto: 0,
   };
+  clienteNombre: string = '';
 
-  constructor(private productosService: ProductosService, private tiposProductoService: TiposProductoService,
-    private LoginService: LoginService
+  constructor(
+    private productosService: ProductosService,
+    private tiposProductoService: TiposProductoService,
+    private loginService: LoginService,
+    private router: Router
   ) {}
+
   ngOnInit(): void {
+    this.obtenerClienteDesdeLocalStorage();
     this.obtenerProductos();
     this.obtenerImagenes();
     this.obtenerTiposProducto();
     this.obtenerTiposSubproducto();
   }
 
+  obtenerClienteDesdeLocalStorage(): void {
+    const clienteData = localStorage.getItem('cliente');
+    if (clienteData) {
+      const cliente = JSON.parse(clienteData);
+      this.clienteNombre = `${cliente.Nombres} ${cliente.Apellidos}`;
+    } else {
+      this.clienteNombre = '';
+    }
+  }
+
   obtenerProductos(): void {
     this.productosService.getProductos().subscribe({
       next: (response: any) => {
         this.productos = response.data.map((p: any) => ({ ...p }));
-        //this.obtenerImagenes();
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
@@ -85,6 +96,7 @@ export class ProductoComponent implements OnInit {
   seleccionarProducto(producto: Producto): void {
     this.productoSeleccionado = producto;
   }
+
   cerrarPanel(): void {
     this.productoSeleccionado = null;
     this.cantidad = 1;
@@ -143,60 +155,57 @@ export class ProductoComponent implements OnInit {
   }
 
   filtrar(): void {
-  this.productosService.getProductos().subscribe({
-    next: (response: any) => {
-      let productosFiltrados = response.data;
+    this.productosService.getProductos().subscribe({
+      next: (response: any) => {
+        let productosFiltrados = response.data;
 
-      if (this.selectedTipo) {
-        productosFiltrados = productosFiltrados.filter(
-          (p: Producto) => p.idTipoProducto === this.selectedTipo?.idTipoProducto
-        );
-      }
+        if (this.selectedTipo) {
+          productosFiltrados = productosFiltrados.filter(
+            (p: Producto) => p.idTipoProducto === this.selectedTipo?.idTipoProducto
+          );
+        }
 
-      if (this.selectedSubproducto) {
-        productosFiltrados = productosFiltrados.filter(
-          (p: Producto) => p.idTipoSubproducto === this.selectedSubproducto?.idTipoSubproducto
-        );
-      }
+        if (this.selectedSubproducto) {
+          productosFiltrados = productosFiltrados.filter(
+            (p: Producto) => p.idTipoSubproducto === this.selectedSubproducto?.idTipoSubproducto
+          );
+        }
 
-      this.productos = productosFiltrados;
-    },
-    error: (error) => {
-      console.error('Error al filtrar productos:', error);
-    },
-  });
-}
+        this.productos = productosFiltrados;
+      },
+      error: (error) => {
+        console.error('Error al filtrar productos:', error);
+      },
+    });
+  }
 
-selectTipo(tipo: { idTipoProducto: number; nombreTipo: string }) {
-  this.selectedTipo = tipo;
-  this.filtrar();
-}
+  selectTipo(tipo: { idTipoProducto: number; nombreTipo: string }) {
+    this.selectedTipo = tipo;
+    this.filtrar();
+  }
 
-selectSubproducto(subtipo: { idTipoSubproducto: number; nombreSubtipo: string }) {
-  this.selectedSubproducto = subtipo;
-  this.filtrar();
-}
+  selectSubproducto(subtipo: { idTipoSubproducto: number; nombreSubtipo: string }) {
+    this.selectedSubproducto = subtipo;
+    this.filtrar();
+  }
 
-limpiarFiltros(): void {
-  this.selectedTipo = null;
-  this.selectedSubproducto = null;
-  this.obtenerProductos(); // Recupera todos los productos sin filtros
-}
+  limpiarFiltros(): void {
+    this.selectedTipo = null;
+    this.selectedSubproducto = null;
+    this.obtenerProductos();
+  }
 
-obtenerEmpleados(): void {
-    this.LoginService.getEmpleados().subscribe({
+  obtenerEmpleados(): void {
+    this.loginService.getEmpleados().subscribe({
       next: (response: any) => {
         this.empleados = response.data;
         console.log('Empleados response:', response.data);
-        
       },
       error: (error) => {
         console.error('Error al obtener los empleados:', error);
       },
     });
-    console.log('Empleados list:', this.empleados);
   }
-
 
   elegirAsesor(): void {
     this.showModal = true;
@@ -208,7 +217,6 @@ obtenerEmpleados(): void {
     this.empleados = [];
   }
 
-  // Abrir el chat de WhatsApp con el número de teléfono del asesor seleccionado y los detalles del producto.
   seleccionarAsesor(empleado: EmpleadoDTO): void {
     if (!this.productoSeleccionado) {
       console.error('No hay producto seleccionado');
@@ -218,10 +226,9 @@ obtenerEmpleados(): void {
 
     let phone = empleado.telefono?.replace(/[\s-]/g, '') || '';
     if (phone && !phone.startsWith('+')) {
-      phone = '+593' + phone; // código de país para Ecuador
+      phone = '+593' + phone;
     }
 
-    // Formatear los detalles del producto para el mensaje de WhatsApp
     const productoNombre = this.productoSeleccionado.nombre;
     const precioUnitario = this.productoSeleccionado.precio.toFixed(2);
     const cantidad = this.cantidad;
@@ -234,6 +241,7 @@ obtenerEmpleados(): void {
                     `Total: $${total}\n` +
                     `Por favor, contáctame para coordinar.`;
 
+    // Codificar el mensaje para la URL
     const mensajeEncoded = encodeURIComponent(mensaje);
 
     // Construir la URL de WhatsApp
@@ -246,5 +254,14 @@ obtenerEmpleados(): void {
     this.cerrarModal();
   }
 
+  consultarPedidos(): void {
+    // Placeholder for future implementation
+    console.log('Consultar pedidos clicked');
+  }
+
+  cerrarSesion(): void {
+    localStorage.removeItem('cliente');
+    this.router.navigate(['/InicioSesion']);
+  }
 
 }

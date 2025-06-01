@@ -61,6 +61,13 @@ export class ProductosService {
   return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagen`, formData);
 }
 
+  uploadImages(formData: FormData): Observable<any> {
+return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagenes`, formData);
+  }
+
+  eliminarImagen(idImagen: number): Observable<any> {
+    return this.http.get(`${this.myAppUrl}${this.myApiUrlImage}/${idImagen}`);
+  }
 
   
 }
