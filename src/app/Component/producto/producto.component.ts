@@ -234,7 +234,6 @@ obtenerEmpleados(): void {
                     `Total: $${total}\n` +
                     `Por favor, contáctame para coordinar.`;
 
-    // Codificar el mensaje para la URL
     const mensajeEncoded = encodeURIComponent(mensaje);
 
     // Construir la URL de WhatsApp
