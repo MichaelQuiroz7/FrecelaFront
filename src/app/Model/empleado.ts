@@ -20,8 +20,22 @@ export interface EmpleadoDTO {
   telefono: string | null;
 }
 
+export interface EmpleadoRequest {
+  Nombres: string;
+  Apellidos: string;
+  Cedula: string;
+  FechaNacimiento: string;
+  Genero: string;
+  Telefono: string;
+  contrasenia: string;
+}
+
 export interface LoginRequest {
   cedula: string;
   contrasenia: string;
 }
 
+export interface descuentoEmpleado {
+  cedula: string;
+  descuento: number;
+}

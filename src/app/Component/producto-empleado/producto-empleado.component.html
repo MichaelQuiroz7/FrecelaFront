@@ -1,256 +1,599 @@
-<!-- HEADER -->
-<header class="header">
-  <h1>Catálogo de Productos</h1>
-  <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
-</header>
-
-<!-- Welcome Message and Logout Button -->
-<div class="welcome-container">
-  <h2>Bienvenido, {{ nombre }} {{ apellido }}</h2>
-  <button class="logout-btn" (click)="cerrarSesion()">Cerrar Sesión</button>
-</div>
-
-<!-- Search Filter -->
-<div class="search-container">
-  <div class="search-wrapper">
-    <input type="text" class="search-input" placeholder="Buscar por nombre..." [(ngModel)]="searchTerm" (input)="buscarProductos()" />
-    <button class="clear-search" *ngIf="searchTerm" (click)="limpiarBusqueda()">✖</button>
-  </div>
-</div>
-
-<!-- CONTENEDOR PRINCIPAL -->
-<div class="contenedor-galeria">
-  <!-- Galería de productos -->
-  <div class="productos-container">
-    <!-- Add Product Card -->
-    <div class="add-product-card" (click)="abrirModalAgregar()" *ngIf="userRole === '1'">
-      <span class="add-icon">+</span>
-      <span class="add-text">Añadir Producto</span>
+<div class="container">
+  <header class="header">
+    <div class="header-right">
+      <h1>Gestión de Productos</h1>
+      <span>{{ nombre }} {{ apellido }}</span>
     </div>
 
-    <!-- Product Cards -->
-    <div class="producto" 
-         *ngFor="let producto of productosFiltrados"
-         (click)="seleccionarProducto(producto)">
-      <img [src]="obtenerImagenDeProducto(producto.idProducto)" 
-           alt="{{ producto.nombre }}" 
-           class="producto-img" />
-      <h3 class="productName">{{ producto.nombre }}</h3>
-      <div class="producto-acciones">
-        <button class="edit-btn" 
-                (click)="abrirModalEditar(producto); $event.stopPropagation()">
-          ✏️
-        </button>
-        <button class="delete-btn" 
-                *ngIf="userRole === '1'"
-                (click)="confirmarEliminar(producto); $event.stopPropagation()">
-          🗑️
-        </button>
+    <button class="logout-btn" (click)="cerrarSesion()">Cerrar Sesión</button>
+  </header>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="buscarProductos()"
+      (keyup.enter)="buscarProductos()"
+      placeholder="Buscar productos..."
+    />
+    <input
+      type="text"
+      [(ngModel)]="saleCode"
+      (input)="buscarVenta()"
+      (keyup.enter)="buscarVenta()"
+      placeholder="Buscar por código de venta..."
+    />
+    <button (click)="limpiarBusqueda()">Limpiar</button>
+  </div>
+
+  <div class="actions">
+    <div class="action-card" (click)="abrirModalAgregar()">
+      <span>Agregar Producto</span>
+    </div>
+    <div
+      class="action-card"
+      *ngIf="userRole === '1'"
+      (click)="abrirModalAgregarEmpleado()"
+    >
+      <span>Agregar Empleado</span>
+    </div>
+    <div
+      class="action-card"
+      *ngIf="userRole === '1'"
+      (click)="abrirModalAdministrarEmpleados()"
+    >
+      <span>Administrar Empleados</span>
+    </div>
+  </div>
+
+  <div class="product-grid">
+    <div
+      class="product-card"
+      *ngFor="let producto of productosFiltrados"
+      (click)="seleccionarProducto(producto)"
+    >
+      <img
+        [src]="obtenerImagenDeProducto(producto.idProducto)"
+        alt="{{ producto.nombre }}"
+        class="product-image"
+      />
+      <div class="product-info">
+        <h3>{{ producto.nombre }}</h3>
+        <p>Precio: ${{ producto.precio }}</p>
+        <p>Stock: {{ producto.stock }}</p>
+        <button class="edit-btn" (click)="abrirModalEditar(producto)">
+            Editar
+          </button>
+        <div
+          class="product-actions"
+          *ngIf="userRole === '1'"
+          (click)="$event.stopPropagation()"
+        >
+          
+          <button class="delete-btn" (click)="confirmarEliminar(producto)">
+            Eliminar
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Modal para añadir producto -->
-<div class="modal add-product" *ngIf="showAddModal" (click)="cerrarModalAgregar()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Añadir Producto</h2>
-      <button class="modal-close" (click)="cerrarModalAgregar()">✖</button>
-    </div>
-    <div class="modal-body">
-      <form>
-        <div class="form-group">
-          <label>Nombre:</label>
-          <input type="text" [(ngModel)]="nuevoProducto.nombre" name="nombre" />
-        </div>
-        <div class="form-group">
-          <label>Tipo de Producto:</label>
-          <div class="dropdown">
-            <button class="dropdown-toggle">
-              {{ selectedTipo?.nombreTipo || "Selecciona Tipo" }}
-            </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item"
-                 *ngFor="let tipo of TipoProducto"
-                 (click)="selectTipo(tipo); $event.preventDefault()">
-                {{ tipo.nombreTipo }}
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Subtipo de Producto:</label>
-          <div class="dropdown">
-            <button class="dropdown-toggle">
-              {{ selectedSubproducto?.nombreSubtipo || "Selecciona Subtipo" }}
-            </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item"
-                 *ngFor="let subtipo of TipoSubproducto"
-                 (click)="selectSubproducto(subtipo); $event.preventDefault()">
-                {{ subtipo.nombreSubtipo }}
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Precio:</label>
-          <input type="number" [(ngModel)]="nuevoProducto.precio" name="precio" />
-        </div>
-        <div class="form-group">
-          <label>Descripción:</label>
-          <textarea [(ngModel)]="nuevoProducto.descripcion" name="descripcion"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Stock:</label>
-          <input type="number" [(ngModel)]="nuevoProducto.stock" name="stock" />
-        </div>
-        <div class="form-group">
-          <label>Imagen:</label>
-          <input type="file" (change)="onFileSelected($event)" accept="image/*" />
-        </div>
-        <button class="save-btn" (click)="guardarNuevoProducto()">Guardar</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Modal para editar producto -->
-<div class="modal edit-product" *ngIf="showEditModal" (click)="cerrarModalEditar()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Editar Producto</h2>
-      <button class="modal-close" (click)="cerrarModalEditar()">✖</button>
-    </div>
-    <div class="modal-body">
-      <form>
-        <div class="form-group">
-          <label>Nombre:</label>
-          <input type="text" [(ngModel)]="productoEditado.nombre" name="nombre" />
-        </div>
-        <div class="form-group">
-          <label>Tipo de Producto:</label>
-          <div class="dropdown">
-            <button class="dropdown-toggle">
-              {{ selectedTipo?.nombreTipo || "Selecciona Tipo" }}
-            </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item"
-                 *ngFor="let tipo of TipoProducto"
-                 (click)="selectTipo(tipo); $event.preventDefault()">
-                {{ tipo.nombreTipo }}
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Subtipo de Producto:</label>
-          <div class="dropdown">
-            <button class="dropdown-toggle">
-              {{ selectedSubproducto?.nombreSubtipo || "Selecciona Subtipo" }}
-            </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item"
-                 *ngFor="let subtipo of TipoSubproducto"
-                 (click)="selectSubproducto(subtipo); $event.preventDefault()">
-                {{ subtipo.nombreSubtipo }}
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Precio:</label>
-          <input type="number" [(ngModel)]="productoEditado.precio" name="precio" />
-        </div>
-        <div class="form-group">
-          <label>Descripción:</label>
-          <textarea [(ngModel)]="productoEditado.descripcion" name="descripcion"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Stock:</label>
-          <input type="number" [(ngModel)]="productoEditado.stock" name="stock" />
-        </div>
-        <div class="form-group">
-          <label>Imágenes Actuales:</label>
-          <div class="image-gallery">
-            <div class="image-container" *ngFor="let imagen of obtenerImagenesDeProducto(productoEditado.idProducto)">
-              <img [src]="imagen.imagenUrl" alt="Imagen del producto" class="producto-img" />
-              <button class="delete-image-btn" (click)="abrirModalConfirmarEliminarImagen(imagen.idImagen)">✖</button>
-            </div>
-            <div class="no-images" *ngIf="obtenerImagenesDeProducto(productoEditado.idProducto).length === 0">
-              No hay imágenes asociadas.
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Agregar Nueva Imagen:</label>
-          <input type="file" (change)="onFileSelected($event)" accept="image/*" multiple />
-          <button class="upload-btn" [disabled]="selectedImages.length === 0" (click)="subirImagenes(false)">Subir Imagen</button>
-        </div>
-        <button class="save-btn" (click)="guardarEdicion()">Guardar Cambios</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Modal para modificar stock -->
-<div class="modal stock-modal" *ngIf="showStockModal" (click)="cerrarModalStock()">
-  <div class="modal-content stock-modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ aumentarStock ? 'Aumentar Stock' : 'Registrar Venta' }}</h2>
-      <button class="modal-close" (click)="cerrarModalStock()">✖</button>
-    </div>
-    <div class="modal-body">
-      <h3>{{ productoSeleccionado?.nombre }}</h3>
-      <p>Stock actual: {{ productoSeleccionado?.stock }}</p>
-      <div class="form-group">
-        <label>Cantidad:</label>
-        <input type="number" [(ngModel)]="cantidadStock" name="cantidadStock" min="1" />
-      </div>
-      <button class="save-btn" (click)="confirmarStock()">Confirmar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal para detalles de producto -->
-<div class="modal product-details" *ngIf="productoSeleccionado" (click)="cerrarPanel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
+  <!-- Panel de detalles del producto -->
+  <div class="product-details" *ngIf="productoSeleccionado">
+    <div class="details-content">
+      <button class="close-btn" (click)="cerrarPanel()">✖</button>
       <h2>{{ productoSeleccionado.nombre }}</h2>
-      <button class="modal-close" (click)="cerrarPanel()">✖</button>
-    </div>
-    <div class="modal-body">
-      <img [src]="obtenerImagenDeProducto(productoSeleccionado.idProducto || 0)" 
-           alt="{{ productoSeleccionado.nombre }}" 
-           class="producto-imgSelec" />
-      <div class="stock-info">
-        <p>Stock actual: {{ productoSeleccionado.stock }}</p>
+      <img
+        [src]="obtenerImagenDeProducto(productoSeleccionado.idProducto)"
+        alt="{{ productoSeleccionado.nombre }}"
+      />
+      <p>
+        <strong>Descripción:</strong> {{ productoSeleccionado.descripcion }}
+      </p>
+      <p><strong>Precio:</strong> ${{ productoSeleccionado.precio }}</p>
+      <p><strong>Stock:</strong> {{ productoSeleccionado.stock }}</p>
+      <div class="stock-controls">
+        <button (click)="abrirModalStock(true)">Aumentar Stock</button>
+        <button (click)="abrirModalStock(false)">Disminuir Stock</button>
       </div>
-      <div class="contenedor-botones">
-        <div class="boton-asesor">
-          <button (click)="abrirModalStock(true)">Aumentar Stock</button>
+    </div>
+  </div>
+
+  <!-- Modal para editar producto -->
+  <div
+    class="modal edit-product"
+    *ngIf="showEditModal"
+    (click)="cerrarModalEditar()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Editar Producto</h2>
+        <button class="modal-close" (click)="cerrarModalEditar()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input
+            type="text"
+            [(ngModel)]="productoEditado.nombre"
+            class="form-control"
+          />
         </div>
-        <div class="boton-cerrar">
-          <button (click)="abrirModalStock(false)">Registrar Venta</button>
+        <div class="form-group">
+          <label>Precio:</label>
+          <input
+            type="number"
+            [(ngModel)]="productoEditado.precio"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
+          <label>Descripción:</label>
+          <textarea
+            [(ngModel)]="productoEditado.descripcion"
+            class="form-control"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Producto:</label>
+          <ng-select
+            [items]="TipoProducto"
+            bindLabel="nombreTipo"
+            bindValue="idTipoProducto"
+            [(ngModel)]="productoEditado.idTipoProducto"
+            (change)="selectTipo($event)"
+            placeholder="Selecciona Tipo"
+          ></ng-select>
+        </div>
+        <div class="form-group">
+          <label>Subtipo de Producto:</label>
+          <ng-select
+            [items]="TipoSubproducto"
+            bindLabel="nombreSubtipo"
+            bindValue="idTipoSubproducto"
+            [(ngModel)]="productoEditado.idTipoSubproducto"
+            (change)="selectSubproducto($event)"
+            placeholder="Selecciona Subtipo"
+          ></ng-select>
+        </div>
+        <div class="form-group">
+          <label>Imágenes:</label>
+          <input
+            type="file"
+            (change)="onFileSelected($event)"
+            multiple
+            accept="image/*"
+          />
+          <button (click)="subirImagenes(false)">Subir Imágenes</button>
+        </div>
+        <div class="image-preview">
+          <div
+            *ngFor="
+              let imagen of obtenerImagenesDeProducto(
+                productoEditado.idProducto
+              )
+            "
+            class="image-item"
+          >
+            <img [src]="imagen.imagenUrl" alt="Imagen del producto" />
+            <button
+              class="delete-image-btn"
+              (click)="abrirModalConfirmarEliminarImagen(imagen.idImagen)"
+            >
+              ✖
+            </button>
+          </div>
+        </div>
+        <button class="save-btn" (click)="guardarEdicion()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para confirmar eliminación de imagen -->
+  <div
+    class="modal confirm-delete"
+    *ngIf="showConfirmDeleteImageModal"
+    (click)="cerrarModalConfirmarEliminarImagen()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirmar Eliminación</h2>
+        <button
+          class="modal-close"
+          (click)="cerrarModalConfirmarEliminarImagen()"
+        >
+          ✖
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas eliminar esta imagen?</p>
+        <button class="confirm-btn" (click)="eliminarImagen()">
+          Confirmar
+        </button>
+        <button
+          class="cancel-btn"
+          (click)="cerrarModalConfirmarEliminarImagen()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para añadir producto -->
+  <div
+    class="modal add-product"
+    *ngIf="showAddModal"
+    (click)="cerrarModalAgregar()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Agregar Producto</h2>
+        <button class="modal-close" (click)="cerrarModalAgregar()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input
+            type="text"
+            [(ngModel)]="nuevoProducto.nombre"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
+          <label>Precio:</label>
+          <input
+            type="number"
+            [(ngModel)]="nuevoProducto.precio"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
+          <label>Descripción:</label>
+          <textarea
+            [(ngModel)]="nuevoProducto.descripcion"
+            class="form-control"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label>Stock:</label>
+          <input
+            type="number"
+            [(ngModel)]="nuevoProducto.stock"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
+          <label>Tipo de Producto:</label>
+          <ng-select
+            [items]="TipoProducto"
+            bindLabel="nombreTipo"
+            bindValue="idTipoProducto"
+            [(ngModel)]="nuevoProducto.idTipoProducto"
+            (change)="selectTipo($event)"
+            placeholder="Selecciona Tipo"
+          ></ng-select>
+        </div>
+        <div class="form-group">
+          <label>Subtipo de Producto:</label>
+          <ng-select
+            [items]="TipoSubproducto"
+            bindLabel="nombreSubtipo"
+            bindValue="idTipoSubproducto"
+            [(ngModel)]="nuevoProducto.idTipoSubproducto"
+            (change)="selectSubproducto($event)"
+            placeholder="Selecciona Subtipo"
+          ></ng-select>
+        </div>
+        <div class="form-group">
+          <label>Imágenes:</label>
+          <input
+            type="file"
+            (change)="onFileSelected($event)"
+            multiple
+            accept="image/*"
+          />
+        </div>
+        <button class="save-btn" (click)="guardarNuevoProducto()">
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para añadir empleado -->
+  <div
+    class="modal add-employee"
+    *ngIf="showAddEmployeeModal"
+    (click)="cerrarModalAgregarEmpleado()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Agregar Empleado</h2>
+        <button class="modal-close" (click)="cerrarModalAgregarEmpleado()">
+          ✖
+        </button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="empleadoForm" (ngSubmit)="guardarNuevoEmpleado()">
+          <div class="form-group">
+            <label>Nombres:</label>
+            <input
+              type="text"
+              formControlName="Nombres"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('Nombres')?.invalid &&
+                  empleadoForm.get('Nombres')?.touched
+              }"
+            />
+            <div
+              *ngIf="
+                empleadoForm.get('Nombres')?.invalid &&
+                empleadoForm.get('Nombres')?.touched
+              "
+              class="error-message"
+            >
+              El nombre es requerido y solo puede contener letras y espacios.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Apellidos:</label>
+            <input
+              type="text"
+              formControlName="Apellidos"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('Apellidos')?.invalid &&
+                  empleadoForm.get('Apellidos')?.touched
+              }"
+            />
+            <div
+              *ngIf="
+                empleadoForm.get('Apellidos')?.invalid &&
+                empleadoForm.get('Apellidos')?.touched
+              "
+              class="error-message"
+            >
+              El apellido es requerido y solo puede contener letras y espacios.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cédula:</label>
+            <input
+              type="text"
+              formControlName="Cedula"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('Cedula')?.invalid &&
+                  empleadoForm.get('Cedula')?.touched
+              }"
+            />
+            <div
+              *ngIf="
+                empleadoForm.get('Cedula')?.invalid &&
+                empleadoForm.get('Cedula')?.touched
+              "
+              class="error-message"
+            >
+              La cédula debe tener exactamente 10 dígitos.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Fecha de Nacimiento:</label>
+            <input
+              type="date"
+              formControlName="FechaNacimiento"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('FechaNacimiento')?.invalid &&
+                  empleadoForm.get('FechaNacimiento')?.touched
+              }"
+            />
+            <div
+              *ngIf="
+                empleadoForm.get('FechaNacimiento')?.invalid &&
+                empleadoForm.get('FechaNacimiento')?.touched
+              "
+              class="error-message"
+            >
+              La fecha de nacimiento es requerida.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Género:</label>
+            <select
+              formControlName="Genero"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('Genero')?.invalid &&
+                  empleadoForm.get('Genero')?.touched
+              }"
+            >
+              <option value="" disabled>Selecciona Género</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
+            <div
+              *ngIf="
+                empleadoForm.get('Genero')?.invalid &&
+                empleadoForm.get('Genero')?.touched
+              "
+              class="error-message"
+            >
+              El género es requerido.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Teléfono:</label>
+            <input
+              type="tel"
+              formControlName="Telefono"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('Telefono')?.invalid &&
+                  empleadoForm.get('Telefono')?.touched
+              }"
+            />
+            <div
+              *ngIf="
+                empleadoForm.get('Telefono')?.invalid &&
+                empleadoForm.get('Telefono')?.touched
+              "
+              class="error-message"
+            >
+              El teléfono debe tener 10 dígitos.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Contraseña:</label>
+            <input
+              type="password"
+              formControlName="contrasenia"
+              class="form-control"
+              [ngClass]="{
+                invalid:
+                  empleadoForm.get('contrasenia')?.invalid &&
+                  empleadoForm.get('contrasenia')?.touched
+              }"
+            />
+            <div
+              *ngIf="
+                empleadoForm.get('contrasenia')?.invalid &&
+                empleadoForm.get('contrasenia')?.touched
+              "
+              class="error-message"
+            >
+              La contraseña es requerida y debe tener al menos 6 caracteres.
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="save-btn"
+            [disabled]="empleadoForm.invalid"
+          >
+            Guardar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para gestionar stock -->
+  <div class="modal stock" *ngIf="showStockModal" (click)="cerrarModalStock()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ aumentarStock ? "Aumentar" : "Disminuir" }} Stock</h2>
+        <button class="modal-close" (click)="cerrarModalStock()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Cantidad:</label>
+          <input
+            type="number"
+            [(ngModel)]="cantidadStock"
+            min="1"
+            class="form-control"
+          />
+        </div>
+        <button class="save-btn" (click)="confirmarStock()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para administrar empleados -->
+  <div
+    class="modal manage-employees"
+    *ngIf="showManageEmployeesModal"
+    (click)="cerrarModalAdministrarEmpleados()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Administrar Empleados</h2>
+        <button class="modal-close" (click)="cerrarModalAdministrarEmpleados()">
+          ✖
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="employee-list">
+          <div class="employee-item" *ngFor="let empleado of empleados">
+            <span>{{ empleado.nombres }} {{ empleado.apellidos }}</span>
+            <span>{{ empleado.cedula }} </span>
+            <div class="employee-actions">
+              <button class="delete-btn" title="Eliminar (Sin funcionalidad)">
+                🗑️
+              </button>
+              <button class="more-btn" title="Más (Sin funcionalidad)">
+                ➕
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Modal para confirmar eliminación de imagen (colocado al final para asegurar orden de apilamiento) -->
-<div class="modal confirm-delete-image" *ngIf="showConfirmDeleteImageModal" (click)="cerrarModalConfirmarEliminarImagen()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Confirmar Eliminación</h2>
-      <button class="modal-close" (click)="cerrarModalConfirmarEliminarImagen()">✖</button>
-    </div>
-    <div class="modal-body">
-      <p>¿Estás seguro de que deseas eliminar esta imagen?</p>
-      <div class="contenedor-botones">
-        <button class="save-btn" (click)="eliminarImagen()">Confirmar</button>
-        <button class="cancel-btn" (click)="cerrarModalConfirmarEliminarImagen()">Cancelar</button>
+  <!-- Modal para detalles de venta -->
+  <div
+    class="modal sale-details"
+    *ngIf="showSaleDetailsModal"
+    (click)="cerrarModalSaleDetails()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Detalles de la Venta</h2>
+        <button class="modal-close" (click)="cerrarModalSaleDetails()">
+          ✖
+        </button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="saleDetailsError" class="error-message">
+          {{ saleDetailsError }}
+        </div>
+        <div *ngIf="saleDetails">
+          <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
+          <p>
+            <strong>Descripción:</strong>
+            {{ saleDetails.descripcionProducto || "N/A" }}
+          </p>
+          <p>
+            <strong>Precio Unitario:</strong> ${{
+              saleDetails.precioUnitario || "N/A"
+            }}
+          </p>
+          <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
+          <p>
+            <strong>Precio Total (sin descuento):</strong> ${{
+              saleDetails.precioTotal || "N/A"
+            }}
+          </p>
+          <div class="form-group">
+            <label>Descuento (%):</label>
+            <select id="descuento" class="form-control discount-select"
+              [ngModel]="selectedDescuento"
+              (ngModelChange)="onDescuentoChange($event)"
+              >
+              <option *ngFor="let descuento of descuentos" [value]="descuento">{{descuento}}</option>
+            </select>
+          </div>
+          <p>
+            <strong>Precio Total (con descuento):</strong> ${{
+              calcularPrecioTotalConDescuento() | number : "1.2-2"
+            }}
+          </p>
+          <p>
+            <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
+            {{ saleDetails.apellidosCliente }}
+          </p>
+          <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
+        </div>
       </div>
     </div>
   </div>

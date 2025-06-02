@@ -11,6 +11,8 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { TiposProductoService } from '../../Service/tipos-producto.service';
 import { Empleado, EmpleadoDTO } from '../../Model/empleado';
 import { Router } from '@angular/router';
+import { VentaService } from '../../Service/venta.service';
+import { Venta } from '../../Model/venta';
 
 @Component({
   selector: 'app-producto',
@@ -20,8 +22,8 @@ import { Router } from '@angular/router';
   styleUrl: './producto.component.css',
 })
 export class ProductoComponent implements OnInit {
- 
-showModal: boolean = false;
+
+  showModal: boolean = false;
   empleados: EmpleadoDTO[] = [];
   cantidad: number = 1;
   productos: Producto[] = [];
@@ -46,6 +48,7 @@ showModal: boolean = false;
     private productosService: ProductosService,
     private tiposProductoService: TiposProductoService,
     private loginService: LoginService,
+    private ventaService: VentaService,
     private router: Router
   ) {}
 
@@ -224,38 +227,63 @@ showModal: boolean = false;
       return;
     }
 
-    let phone = empleado.telefono?.replace(/[\s-]/g, '') || '';
-    if (phone && !phone.startsWith('+')) {
-      phone = '+593' + phone;
+    const clienteData = localStorage.getItem('cliente');
+    if (!clienteData) {
+      console.error('No hay datos de cliente en localStorage');
+      this.cerrarModal();
+      return;
     }
 
-    const productoNombre = this.productoSeleccionado.nombre;
-    const precioUnitario = this.productoSeleccionado.precio.toFixed(2);
-    const cantidad = this.cantidad;
-    const total = (this.productoSeleccionado.precio * this.cantidad).toFixed(2);
+    const cliente = JSON.parse(clienteData);
+    const cedulaCliente = cliente.Cedula;
 
-    const mensaje = `Hola ${empleado.nombres}, estoy interesado en comprar:\n` +
-                    `Producto: ${productoNombre}\n` +
-                    `Precio unitario: $${precioUnitario}\n` +
-                    `Cantidad: ${cantidad}\n` +
-                    `Total: $${total}\n` +
-                    `Por favor, contáctame para coordinar.`;
+    const venta: Venta = {
+      CedulaCliente: cedulaCliente,
+      CedulaEmpleado: empleado.cedula,
+      IdProducto: this.productoSeleccionado.idProducto,
+      Cantidad: this.cantidad,
+      PrecioUnitario: this.productoSeleccionado.precio,
+    };
 
-    // Codificar el mensaje para la URL
-    const mensajeEncoded = encodeURIComponent(mensaje);
+    this.ventaService.registrarPedido(venta).subscribe({
+      next: (response: any) => {
+        if (response.code === '01') {
+          const ventaId = response.message.split('ID de venta: ')[1] || 'Desconocido';
+          let phone = empleado.telefono?.replace(/[\s-]/g, '') || '';
+          if (phone && !phone.startsWith('+')) {
+            phone = '+593' + phone;
+          }
 
-    // Construir la URL de WhatsApp
-    const whatsappUrl = `https://wa.me/${phone}?text=${mensajeEncoded}`;
+          const productoNombre = this.productoSeleccionado!.nombre;
+          const precioUnitario = this.productoSeleccionado!.precio.toFixed(2);
+          const cantidad = this.cantidad;
+          const total = (this.productoSeleccionado!.precio * this.cantidad).toFixed(2);
 
-    // abrir el chat de WhatsApp en una nueva pestaña o ventana
-    window.open(whatsappUrl, '_blank');
+          const mensaje = `ID del Pedido: ${ventaId}\n` +
+                          `Hola ${empleado.nombres}, estoy interesado en comprar:\n` +
+                          `Producto: ${productoNombre}\n` +
+                          `Precio unitario: $${precioUnitario}\n` +
+                          `Cantidad: ${cantidad}\n` +
+                          `Total: $${total}\n` +
+                          `quisiera conocer sobre los descuentos`;
 
-    console.log('Asesor seleccionado:', empleado);
-    this.cerrarModal();
+          const mensajeEncoded = encodeURIComponent(mensaje);
+          const whatsappUrl = `https://wa.me/${phone}?text=${mensajeEncoded}`;
+          window.open(whatsappUrl, '_blank');
+          console.log('Venta registrada y WhatsApp abierto:', response);
+        } else {
+          console.error('Error en la venta:', response.message);
+        }
+        this.cerrarModal();
+      },
+      error: (error) => {
+        console.error('Error al registrar la venta:', error);
+        this.cerrarModal();
+      },
+    });
   }
 
   consultarPedidos(): void {
-    // Placeholder for future implementation
     console.log('Consultar pedidos clicked');
   }
 

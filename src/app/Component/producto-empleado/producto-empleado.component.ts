@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ProductosService } from '../../Service/productos.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Producto } from '../../Model/producto';
 import { Imagen } from '../../Model/imagen';
@@ -10,20 +10,28 @@ import { TipoSubproducto } from '../../Model/tipo-sub-producto';
 import { TiposProductoService } from '../../Service/tipos-producto.service';
 import { LoginService } from '../../Service/login.service';
 import { Router } from '@angular/router';
+import { EmpleadoDTO, EmpleadoRequest } from '../../Model/empleado';
+import { DetalleVentaRequest, DetalleVentaResponse } from '../../Model/venta';
+import { VentaService } from '../../Service/venta.service';
 
 @Component({
   selector: 'app-producto-empleado',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgSelectModule],
+  imports: [CommonModule, FormsModule, NgSelectModule, ReactiveFormsModule],
   templateUrl: './producto-empleado.component.html',
   styleUrl: './producto-empleado.component.css',
 })
 export class ProductoEmpleadoComponent {
+
   
   showEditModal: boolean = false;
   showStockModal: boolean = false;
   showAddModal: boolean = false;
+  showAddEmployeeModal: boolean = false;
   showConfirmDeleteImageModal: boolean = false;
+  showManageEmployeesModal: boolean = false;
+  showSaleDetailsModal: boolean = false;
+
   productoEditado: Producto = {
     idProducto: 0,
     nombre: '',
@@ -42,43 +50,101 @@ export class ProductoEmpleadoComponent {
     idTipoProducto: 0,
     idTipoSubproducto: 0,
   };
+  empleadoForm: FormGroup;
   selectedImage: File | null = null;
   selectedImages: File[] = [];
   imagenIdToDelete: number | null = null;
   cantidadStock: number = 1;
   aumentarStock: boolean = true;
   searchTerm: string = '';
+  saleCode: string = ''; 
   userRole: string | null = null;
   nombre: string = '';
   apellido: string = '';
+  ceduladesc: string = '';
 
   productos: Producto[] = [];
   imagenes: Imagen[] = [];
   TipoProducto: TipoProducto[] = [];
   TipoSubproducto: TipoSubproducto[] = [];
+  empleados: EmpleadoDTO[] = [];
   selectedTipo: { idTipoProducto: number; nombreTipo: string } | null = null;
   selectedSubproducto: { idTipoSubproducto: number; nombreSubtipo: string } | null = null;
   productoSeleccionado: Producto | null = null;
   cantidad: number = 1;
   productosFiltrados: Producto[] = [];
+  saleDetails: DetalleVentaResponse | null = null;
+  saleDetailsError: string | null = null;
+  descuentos: number[] = []; 
+  selectedDescuento: number | null = null;
 
   constructor(
     private productosService: ProductosService,
     private tiposProductoService: TiposProductoService,
     private loginService: LoginService,
-    private router: Router
-  ) {}
+    private ventaService: VentaService, 
+    private router: Router,
+    private fb: FormBuilder
+  ) {
+    this.empleadoForm = this.fb.group({
+      Nombres: ['', [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/)]],
+      Apellidos: ['', [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/)]],
+      Cedula: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      FechaNacimiento: ['', Validators.required],
+      Genero: ['', Validators.required],
+      Telefono: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      contrasenia: ['', [Validators.required, Validators.minLength(6)]],
+    });
+  }
 
   ngOnInit(): void {
     this.nombre = localStorage.getItem('nombre') || '';
     this.apellido = localStorage.getItem('apellido') || '';
+    this.ceduladesc = localStorage.getItem('cedula')||'';
     this.obtenerProductos();
     this.obtenerImagenes();
     this.obtenerTiposProducto();
     this.obtenerTiposSubproducto();
     this.checkUserRole();
+    this.obtenerEmpleados(); 
+    this.obtenerDescuentos();
   }
 
+  obtenerDescuentos() {
+    this.loginService.getDescuentoByCedula(this.ceduladesc).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.descuentos = response.data.map((item: any) => item.descuento);
+          console.log('Descuentos obtenidos:', this.descuentos);
+          this.selectedDescuento = this.descuentos.length > 0 ? this.descuentos[0] : null;
+        } else {
+          console.log('No se encontró descuento para la cédula proporcionada.');
+          this.descuentos = [];
+          this.selectedDescuento = null;
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener el descuento:', error);
+        alert('Error al obtener el descuento. Por favor, intenta de nuevo.');
+        this.descuentos = [];
+        this.selectedDescuento = null;
+      },
+    });
+  }
+
+  calcularPrecioTotalConDescuento(): number {
+    if (!this.saleDetails || !this.saleDetails.precioTotal || this.selectedDescuento === null) {
+      return this.saleDetails?.precioTotal || 0;
+    }
+    const precioTotal = this.saleDetails.precioTotal;
+    const descuento = this.selectedDescuento / 100;
+    return precioTotal * (1 - descuento);
+  }
+
+  onDescuentoChange(event: any): void {
+    this.selectedDescuento = event ? Number(event) : null;
+  }
+  
   checkUserRole(): void {
     this.userRole = localStorage.getItem('token');
   }
@@ -107,7 +173,11 @@ export class ProductoEmpleadoComponent {
 
   limpiarBusqueda(): void {
     this.searchTerm = '';
+    this.saleCode = ''; 
     this.productosFiltrados = [...this.productos];
+    this.saleDetails = null;
+    this.saleDetailsError = null;
+    this.showSaleDetailsModal = false;
   }
 
   cerrarSesion(): void {
@@ -131,7 +201,7 @@ export class ProductoEmpleadoComponent {
   }
 
   obtenerImagenesDeProducto(idProducto: number): Imagen[] {
-    return this.imagenes.filter((i) => i.idProducto === idProducto);
+    return this.imagenes.filter((img) => img.idProducto === idProducto);
   }
 
   obtenerImagenDeProducto(idProducto: number): string {
@@ -243,6 +313,9 @@ export class ProductoEmpleadoComponent {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedImages = Array.from(input.files);
+      if (this.showAddModal && input.files.length === 1) {
+        this.selectedImage = input.files[0];
+      }
     }
   }
 
@@ -317,14 +390,14 @@ export class ProductoEmpleadoComponent {
         },
         error: (error) => {
           console.error('Error al eliminar producto:', error);
-          alert('No se pudo eliminar el producto. Verifica si tienes permisos.');
+          alert('No se pudo eliminar el producto.');
         },
       });
     }
   }
 
-  abrirModalStock(aumentar: boolean): void {
-    this.aumentarStock = aumentar;
+  abrirModalStock(aumentarStock: boolean): void {
+    this.aumentarStock = aumentarStock;
     this.cantidadStock = 1;
     this.showStockModal = true;
   }
@@ -335,7 +408,7 @@ export class ProductoEmpleadoComponent {
   }
 
   confirmarStock(): void {
-    if (this.productoSeleccionado == null) {
+    if (!this.productoSeleccionado) {
       console.error('Error: productoSeleccionado es null');
       return;
     }
@@ -356,7 +429,7 @@ export class ProductoEmpleadoComponent {
         },
         error: (error) => {
           console.error('Error al actualizar stock:', error);
-          alert('Error al actualizar el stock. Por favor, inténtelo de nuevo.');
+          alert('Error al actualizar el stock. Por favor, intenta de nuevo.');
         },
       });
   }
@@ -439,6 +512,136 @@ export class ProductoEmpleadoComponent {
         alert('Error al guardar el producto.');
       },
     });
+  }
+
+  abrirModalAgregarEmpleado(): void {
+    this.empleadoForm.reset();
+    this.showAddEmployeeModal = true;
+  }
+
+  cerrarModalAgregarEmpleado(): void {
+    this.showAddEmployeeModal = false;
+    this.empleadoForm.reset();
+  }
+
+  guardarNuevoEmpleado(): void {
+    if (this.empleadoForm.invalid) {
+      this.empleadoForm.markAllAsTouched();
+      alert('Por favor, completa correctamente todos los campos requeridos.');
+      return;
+    }
+
+    const empleadoRequest: EmpleadoRequest = {
+      Nombres: this.empleadoForm.value.Nombres,
+      Apellidos: this.empleadoForm.value.Apellidos,
+      Cedula: this.empleadoForm.value.Cedula,
+      FechaNacimiento: this.empleadoForm.value.FechaNacimiento,
+      Genero: this.empleadoForm.value.Genero,
+      Telefono: this.empleadoForm.value.Telefono,
+      contrasenia: this.empleadoForm.value.contrasenia,
+    };
+
+    console.log('Enviando empleado:', JSON.stringify(empleadoRequest, null, 2));
+
+    this.loginService.registrarEmpleado(empleadoRequest).subscribe({
+      next: (response: any) => {
+        alert('Empleado registrado exitosamente.');
+        this.cerrarModalAgregarEmpleado();
+        this.obtenerEmpleados(); // Refresh employee list
+      },
+      error: (error) => {
+        console.error('Error al registrar empleado:', error);
+        if (error.error && error.error.errors) {
+          const errorMessages = Object.values(error.error.errors).flat().join('\n');
+          alert(`Error al registrar el empleado:\n${errorMessages}`);
+        } else {
+          alert('Error al registrar el empleado. Por favor, intenta de nuevo.');
+        }
+      },
+    });
+  }
+
+  // New methods for employee management
+  abrirModalAdministrarEmpleados(): void {
+    this.showManageEmployeesModal = true;
+  }
+
+  cerrarModalAdministrarEmpleados(): void {
+    this.showManageEmployeesModal = false;
+  }
+
+  obtenerEmpleados(): void {
+    this.loginService.getEmpleados().subscribe({
+      next: (response: any) => {
+        this.empleados = response.data;
+        console.log('Empleados response:', response.data);
+      },
+      error: (error) => {
+        console.error('Error al obtener los empleados:', error);
+      },
+    });
+  }
+
+  buscarVenta(): void {
+    this.saleDetails = null;
+    this.saleDetailsError = null;
+    this.showSaleDetailsModal = false;
+
+    const trimmedSaleCode = this.saleCode.trim();
+
+    if (trimmedSaleCode === '') {
+      return;
+    }
+
+    if (!this.isValidBase64(trimmedSaleCode)) {
+      this.saleDetailsError = 'El código de venta no es una cadena válida en base64.';
+      this.showSaleDetailsModal = true;
+      return;
+    }
+
+    const request: DetalleVentaRequest = {
+      IdVentaBase64: trimmedSaleCode,
+    };
+
+    console.log('Enviando solicitud de detalle de venta:', JSON.stringify(request, null, 2));
+
+    this.ventaService.getDetalleVenta(request).subscribe({
+      next: (response: any) => {
+        console.log('Respuesta del servidor:', response);
+        this.saleDetails = response;
+        this.saleDetailsError = null;
+        this.showSaleDetailsModal = true;
+      },
+      error: (error) => {
+        console.error('Error al obtener detalles de la venta:', error);
+        let errorMessage = 'Error al buscar la venta. Por favor, verifica el código e intenta de nuevo.';
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        }
+        this.saleDetails = null;
+        this.saleDetailsError = errorMessage;
+        this.showSaleDetailsModal = true;
+      },
+    });
+  }
+
+  cerrarModalSaleDetails(): void {
+    this.showSaleDetailsModal = false;
+    this.saleDetails = null;
+    this.saleDetailsError = null;
+  }
+
+  isValidBase64(str: string): boolean {
+    try {
+      const base64Regex = /^[A-Za-z0-9+/=]+$/;
+      if (!base64Regex.test(str)) {
+        return false;
+      }
+      atob(str);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
 
