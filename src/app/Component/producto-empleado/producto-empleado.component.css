@@ -156,7 +156,7 @@
 }
 
 .edit-btn, .delete-btn {
-  flex: 1;
+  width: 100%;
   padding: 8px;
   border: none;
   border-radius: 4px;
@@ -511,6 +511,29 @@ ng-select .ng-select-container {
   text-align: center;
 }
 
+/* Add Discount Modal */
+.add-discount .modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.add-discount .form-group input[readonly] {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {

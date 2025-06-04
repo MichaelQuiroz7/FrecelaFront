@@ -22,3 +22,23 @@ export interface DetalleVentaResponse {
   apellidosCliente: string;
   cedulaCliente: string;
 }
+
+export interface LatexRequest {
+  Cliente: string;
+  Cedula: string;
+  Fecha: string;
+  Productos: ProductoRequest[];
+  SubtotalSinDescuento: number;
+  Descuento: number;
+  SubtotalConDescuento: number;
+  Iva: number;
+  Total: number;
+}
+
+export interface ProductoRequest {
+  Codigo: string;
+  Descripcion: string;
+  Cantidad: number;
+  PrecioUnitario: number;
+  Total: number;
+}

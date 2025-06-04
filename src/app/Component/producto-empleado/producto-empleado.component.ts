@@ -1,7 +1,13 @@
 import { Component } from '@angular/core';
 import { ProductosService } from '../../Service/productos.service';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Producto } from '../../Model/producto';
 import { Imagen } from '../../Model/imagen';
@@ -10,8 +16,16 @@ import { TipoSubproducto } from '../../Model/tipo-sub-producto';
 import { TiposProductoService } from '../../Service/tipos-producto.service';
 import { LoginService } from '../../Service/login.service';
 import { Router } from '@angular/router';
-import { EmpleadoDTO, EmpleadoRequest } from '../../Model/empleado';
-import { DetalleVentaRequest, DetalleVentaResponse } from '../../Model/venta';
+import {
+  descuentoEmpleado,
+  EmpleadoDTO,
+  EmpleadoRequest,
+} from '../../Model/empleado';
+import {
+  DetalleVentaRequest,
+  DetalleVentaResponse,
+  LatexRequest,
+} from '../../Model/venta';
 import { VentaService } from '../../Service/venta.service';
 
 @Component({
@@ -23,7 +37,8 @@ import { VentaService } from '../../Service/venta.service';
 })
 export class ProductoEmpleadoComponent {
 
-  
+  isGeneratingPDF: boolean = false;
+
   showEditModal: boolean = false;
   showStockModal: boolean = false;
   showAddModal: boolean = false;
@@ -57,7 +72,7 @@ export class ProductoEmpleadoComponent {
   cantidadStock: number = 1;
   aumentarStock: boolean = true;
   searchTerm: string = '';
-  saleCode: string = ''; 
+  saleCode: string = '';
   userRole: string | null = null;
   nombre: string = '';
   apellido: string = '';
@@ -69,44 +84,57 @@ export class ProductoEmpleadoComponent {
   TipoSubproducto: TipoSubproducto[] = [];
   empleados: EmpleadoDTO[] = [];
   selectedTipo: { idTipoProducto: number; nombreTipo: string } | null = null;
-  selectedSubproducto: { idTipoSubproducto: number; nombreSubtipo: string } | null = null;
+  selectedSubproducto: {
+    idTipoSubproducto: number;
+    nombreSubtipo: string;
+  } | null = null;
   productoSeleccionado: Producto | null = null;
   cantidad: number = 1;
   productosFiltrados: Producto[] = [];
   saleDetails: DetalleVentaResponse | null = null;
   saleDetailsError: string | null = null;
-  descuentos: number[] = []; 
+  descuentos: number[] = [];
   selectedDescuento: number | null = null;
+  showAddDiscountModal: boolean = false;
+  empleadoSeleccionado: EmpleadoDTO | null = null;
+  nuevoDescuento: number | null = null;
+  subtotalIVA: number;
+  porcentajeDescuento: number;
 
   constructor(
     private productosService: ProductosService,
     private tiposProductoService: TiposProductoService,
     private loginService: LoginService,
-    private ventaService: VentaService, 
+    private ventaService: VentaService,
     private router: Router,
     private fb: FormBuilder
   ) {
     this.empleadoForm = this.fb.group({
       Nombres: ['', [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/)]],
-      Apellidos: ['', [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/)]],
+      Apellidos: [
+        '',
+        [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/)],
+      ],
       Cedula: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       FechaNacimiento: ['', Validators.required],
       Genero: ['', Validators.required],
       Telefono: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       contrasenia: ['', [Validators.required, Validators.minLength(6)]],
     });
+    this.subtotalIVA = 0;
+    this.porcentajeDescuento = 0;
   }
 
   ngOnInit(): void {
     this.nombre = localStorage.getItem('nombre') || '';
     this.apellido = localStorage.getItem('apellido') || '';
-    this.ceduladesc = localStorage.getItem('cedula')||'';
+    this.ceduladesc = localStorage.getItem('cedula') || '';
     this.obtenerProductos();
     this.obtenerImagenes();
     this.obtenerTiposProducto();
     this.obtenerTiposSubproducto();
     this.checkUserRole();
-    this.obtenerEmpleados(); 
+    this.obtenerEmpleados();
     this.obtenerDescuentos();
   }
 
@@ -115,8 +143,8 @@ export class ProductoEmpleadoComponent {
       next: (response: any) => {
         if (response && response.data) {
           this.descuentos = response.data.map((item: any) => item.descuento);
-          console.log('Descuentos obtenidos:', this.descuentos);
-          this.selectedDescuento = this.descuentos.length > 0 ? this.descuentos[0] : null;
+          this.selectedDescuento =
+            this.descuentos.length > 0 ? this.descuentos[0] : null;
         } else {
           console.log('No se encontró descuento para la cédula proporcionada.');
           this.descuentos = [];
@@ -132,19 +160,12 @@ export class ProductoEmpleadoComponent {
     });
   }
 
-  calcularPrecioTotalConDescuento(): number {
-    if (!this.saleDetails || !this.saleDetails.precioTotal || this.selectedDescuento === null) {
-      return this.saleDetails?.precioTotal || 0;
-    }
-    const precioTotal = this.saleDetails.precioTotal;
-    const descuento = this.selectedDescuento / 100;
-    return precioTotal * (1 - descuento);
-  }
+ 
 
   onDescuentoChange(event: any): void {
     this.selectedDescuento = event ? Number(event) : null;
   }
-  
+
   checkUserRole(): void {
     this.userRole = localStorage.getItem('token');
   }
@@ -173,7 +194,7 @@ export class ProductoEmpleadoComponent {
 
   limpiarBusqueda(): void {
     this.searchTerm = '';
-    this.saleCode = ''; 
+    this.saleCode = '';
     this.productosFiltrados = [...this.productos];
     this.saleDetails = null;
     this.saleDetailsError = null;
@@ -240,7 +261,10 @@ export class ProductoEmpleadoComponent {
     }
   }
 
-  selectSubproducto(subtipo: { idTipoSubproducto: number; nombreSubtipo: string }): void {
+  selectSubproducto(subtipo: {
+    idTipoSubproducto: number;
+    nombreSubtipo: string;
+  }): void {
     this.selectedSubproducto = subtipo;
     if (this.showAddModal) {
       this.nuevoProducto.idTipoSubproducto = subtipo.idTipoSubproducto;
@@ -260,8 +284,14 @@ export class ProductoEmpleadoComponent {
 
   abrirModalEditar(producto: Producto): void {
     this.productoEditado = { ...producto };
-    this.selectedTipo = this.TipoProducto.find((t) => t.idTipoProducto === producto.idTipoProducto) || null;
-    this.selectedSubproducto = this.TipoSubproducto.find((s) => s.idTipoSubproducto === producto.idTipoSubproducto) || null;
+    this.selectedTipo =
+      this.TipoProducto.find(
+        (t) => t.idTipoProducto === producto.idTipoProducto
+      ) || null;
+    this.selectedSubproducto =
+      this.TipoSubproducto.find(
+        (s) => s.idTipoSubproducto === producto.idTipoSubproducto
+      ) || null;
     this.selectedImages = [];
     this.showEditModal = true;
   }
@@ -299,7 +329,9 @@ export class ProductoEmpleadoComponent {
     }
     this.productosService.eliminarImagen(this.imagenIdToDelete).subscribe({
       next: () => {
-        this.imagenes = this.imagenes.filter((img) => img.idImagen !== this.imagenIdToDelete);
+        this.imagenes = this.imagenes.filter(
+          (img) => img.idImagen !== this.imagenIdToDelete
+        );
         this.cerrarModalConfirmarEliminarImagen();
       },
       error: (error) => {
@@ -325,7 +357,9 @@ export class ProductoEmpleadoComponent {
       return;
     }
 
-    const idProducto = isAddModal ? this.nuevoProducto.idProducto : this.productoEditado.idProducto;
+    const idProducto = isAddModal
+      ? this.nuevoProducto.idProducto
+      : this.productoEditado.idProducto;
 
     if (!idProducto && isAddModal) {
       alert('Por favor, guarda el producto primero antes de subir imágenes.');
@@ -360,10 +394,14 @@ export class ProductoEmpleadoComponent {
     this.productosService.actualizarProducto(this.productoEditado).subscribe({
       next: () => {
         this.productos = this.productos.map((p) =>
-          p.idProducto === this.productoEditado.idProducto ? { ...this.productoEditado } : p
+          p.idProducto === this.productoEditado.idProducto
+            ? { ...this.productoEditado }
+            : p
         );
         this.productosFiltrados = this.productosFiltrados.map((p) =>
-          p.idProducto === this.productoEditado.idProducto ? { ...this.productoEditado } : p
+          p.idProducto === this.productoEditado.idProducto
+            ? { ...this.productoEditado }
+            : p
         );
         this.cerrarModalEditar();
         alert('Producto actualizado exitosamente.');
@@ -376,23 +414,35 @@ export class ProductoEmpleadoComponent {
   }
 
   confirmarEliminar(producto: Producto): void {
-    if (confirm(`¿Está seguro de que desea eliminar el producto ${producto.nombre}?`)) {
+    if (
+      confirm(
+        `¿Está seguro de que desea eliminar el producto ${producto.nombre}?`
+      )
+    ) {
       this.userRole = localStorage.getItem('token');
       const userRoleNumber = this.userRole ? Number(this.userRole) : null;
       if (userRoleNumber === null || isNaN(userRoleNumber)) {
-        alert('No se pudo obtener el rol del usuario. Verifica si tienes permisos.');
+        alert(
+          'No se pudo obtener el rol del usuario. Verifica si tienes permisos.'
+        );
         return;
       }
-      this.productosService.eliminarProducto(producto.idProducto, userRoleNumber).subscribe({
-        next: () => {
-          this.productos = this.productos.filter((p) => p.idProducto !== producto.idProducto);
-          this.productosFiltrados = this.productosFiltrados.filter((p) => p.idProducto !== producto.idProducto);
-        },
-        error: (error) => {
-          console.error('Error al eliminar producto:', error);
-          alert('No se pudo eliminar el producto.');
-        },
-      });
+      this.productosService
+        .eliminarProducto(producto.idProducto, userRoleNumber)
+        .subscribe({
+          next: () => {
+            this.productos = this.productos.filter(
+              (p) => p.idProducto !== producto.idProducto
+            );
+            this.productosFiltrados = this.productosFiltrados.filter(
+              (p) => p.idProducto !== producto.idProducto
+            );
+          },
+          error: (error) => {
+            console.error('Error al eliminar producto:', error);
+            alert('No se pudo eliminar el producto.');
+          },
+        });
     }
   }
 
@@ -418,7 +468,11 @@ export class ProductoEmpleadoComponent {
       cantidad: this.cantidadStock,
     });
     this.productosService
-      .actualizarStock(this.productoSeleccionado.idProducto, this.aumentarStock, this.cantidadStock)
+      .actualizarStock(
+        this.productoSeleccionado.idProducto,
+        this.aumentarStock,
+        this.cantidadStock
+      )
       .subscribe({
         next: (response) => {
           alert(response.message);
@@ -467,7 +521,11 @@ export class ProductoEmpleadoComponent {
   }
 
   guardarNuevoProducto(): void {
-    if (!this.nuevoProducto.nombre || !this.nuevoProducto.idTipoProducto || !this.nuevoProducto.idTipoSubproducto) {
+    if (
+      !this.nuevoProducto.nombre ||
+      !this.nuevoProducto.idTipoProducto ||
+      !this.nuevoProducto.idTipoSubproducto
+    ) {
       alert('Por favor, completa todos los campos requeridos.');
       return;
     }
@@ -552,7 +610,9 @@ export class ProductoEmpleadoComponent {
       error: (error) => {
         console.error('Error al registrar empleado:', error);
         if (error.error && error.error.errors) {
-          const errorMessages = Object.values(error.error.errors).flat().join('\n');
+          const errorMessages = Object.values(error.error.errors)
+            .flat()
+            .join('\n');
           alert(`Error al registrar el empleado:\n${errorMessages}`);
         } else {
           alert('Error al registrar el empleado. Por favor, intenta de nuevo.');
@@ -561,10 +621,10 @@ export class ProductoEmpleadoComponent {
     });
   }
 
-  // New methods for employee management
-  abrirModalAdministrarEmpleados(): void {
-    this.showManageEmployeesModal = true;
-  }
+  // // New methods for employee management
+  // abrirModalAdministrarEmpleados(): void {
+  //   this.showManageEmployeesModal = true;
+  // }
 
   cerrarModalAdministrarEmpleados(): void {
     this.showManageEmployeesModal = false;
@@ -594,7 +654,8 @@ export class ProductoEmpleadoComponent {
     }
 
     if (!this.isValidBase64(trimmedSaleCode)) {
-      this.saleDetailsError = 'El código de venta no es una cadena válida en base64.';
+      this.saleDetailsError =
+        'El código de venta no es una cadena válida en base64.';
       this.showSaleDetailsModal = true;
       return;
     }
@@ -603,18 +664,16 @@ export class ProductoEmpleadoComponent {
       IdVentaBase64: trimmedSaleCode,
     };
 
-    console.log('Enviando solicitud de detalle de venta:', JSON.stringify(request, null, 2));
-
     this.ventaService.getDetalleVenta(request).subscribe({
       next: (response: any) => {
-        console.log('Respuesta del servidor:', response);
         this.saleDetails = response;
         this.saleDetailsError = null;
         this.showSaleDetailsModal = true;
       },
       error: (error) => {
         console.error('Error al obtener detalles de la venta:', error);
-        let errorMessage = 'Error al buscar la venta. Por favor, verifica el código e intenta de nuevo.';
+        let errorMessage =
+          'Error al buscar la venta. Por favor, verifica el código e intenta de nuevo.';
         if (error.error && error.error.message) {
           errorMessage = error.error.message;
         }
@@ -644,5 +703,183 @@ export class ProductoEmpleadoComponent {
     }
   }
 
+  abrirModalAdministrarEmpleados(): void {
+    this.showManageEmployeesModal = true;
+    this.empleadoSeleccionado = null;
+    this.nuevoDescuento = null;
+    this.showManageEmployeesModal = true;
+    this.obtenerEmpleados();
+  }
 
+  abrirModalAgregarDescuento(empleado: EmpleadoDTO): void {
+    this.empleadoSeleccionado = empleado;
+    this.nuevoDescuento = null;
+    this.showAddDiscountModal = true;
+  }
+
+  cerrarModalAgregarDescuento(): void {
+    this.showAddDiscountModal = false;
+    this.empleadoSeleccionado = null;
+    this.nuevoDescuento = null;
+  }
+
+  guardarDescuento(): void {
+    if (
+      !this.empleadoSeleccionado ||
+      this.nuevoDescuento === null ||
+      this.nuevoDescuento < 0 ||
+      this.nuevoDescuento > 100
+    ) {
+      alert('Por favor, ingrese un porcentaje de descuento válido (0-100).');
+      return;
+    }
+
+    const descuento: descuentoEmpleado = {
+      cedula: this.empleadoSeleccionado.cedula,
+      descuento: this.nuevoDescuento,
+    };
+
+    this.loginService.registrarDescuentoEmpleado(descuento).subscribe({
+      next: (response: any) => {
+        alert('Descuento registrado exitosamente.');
+        this.cerrarModalAgregarDescuento();
+        this.obtenerDescuentos();
+      },
+      error: (error) => {
+        console.error('Error al registrar descuento:', error);
+        alert('Error al registrar el descuento. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+  calcularIVA(): number {
+  const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
+  this.subtotalIVA = subtotalConDescuento;
+  return subtotalConDescuento * 0.14; // 14% IVA
+}
+
+  calcularSubtotalSinIVA(precioTotalConIVA: number): number {
+  const ivaRate = 0.14; 
+  return precioTotalConIVA / (1 + ivaRate);
+}
+
+calcularTotalConIVA(): number {
+  const subtotal = this.calcularPrecioTotalConDescuento();
+  const iva = this.calcularIVA();
+  return subtotal + iva;
+}
+
+calcularIVAInicial(precioTotalConIVA: number): number {
+  const subtotalSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
+  return precioTotalConIVA - subtotalSinIVA;
+}
+
+calcularPrecioTotalConDescuento(): number {
+  if (!this.saleDetails || !this.saleDetails.precioTotal) {
+    return 0;
+  }
+
+  const subtotalSinIVA = this.calcularSubtotalSinIVA(this.saleDetails.precioTotal);
+
+  if (this.selectedDescuento === null || this.selectedDescuento === 0) {
+    return subtotalSinIVA;
+  }
+
+  const descuento = this.selectedDescuento / 100;
+  this.porcentajeDescuento = descuento;
+  return subtotalSinIVA * (1 - descuento);
+}
+
+
+
+
+
+generarOrdenPago(): void {
+  if (!this.saleDetails) {
+    alert('No hay detalles de venta disponibles.');
+    return;
+  }
+
+  // Activar el estado de carga
+    this.isGeneratingPDF = true;
+
+  const precioTotalConIVA = this.saleDetails.precioTotal || 0;
+  const subtotalSinDescuentoSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
+  const ivaInicial = this.calcularIVAInicial(precioTotalConIVA);
+
+  const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
+  const ivaRecalculado = this.calcularIVA();
+  const totalFinal = this.calcularTotalConIVA();
+
+  const descuentoMonto = subtotalSinDescuentoSinIVA - subtotalConDescuento;
+
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const request: LatexRequest = {
+    Cliente: `${this.saleDetails.nombresCliente} ${this.saleDetails.apellidosCliente}`,
+    Cedula: this.saleDetails.cedulaCliente,
+    Fecha: fecha,
+    Productos: [
+      {
+        Codigo: 'N/A',
+        Descripcion: this.saleDetails.nombreProducto || 'N/A',
+        Cantidad: this.saleDetails.cantidad || 0,
+        PrecioUnitario: this.saleDetails.precioUnitario || 0,
+        Total: this.saleDetails.precioTotal || 0,
+      },
+    ],
+    SubtotalSinDescuento: subtotalSinDescuentoSinIVA,
+    Descuento: descuentoMonto,
+    SubtotalConDescuento: subtotalConDescuento,
+    Iva: ivaRecalculado,
+    Total: totalFinal,
+  };
+
+  this.downloadLaTeXAsPDF(
+    JSON.stringify(request),
+    `orden_de_venta_${this.saleDetails.cedulaCliente}_${Date.now()}.pdf`
+  );
+}
+  
+
+
+  downloadLaTeXAsPDF(requestData: string, filename: string): void {
+    if (!this.saleDetails || !this.saleDetails.cedulaCliente) {
+      alert(
+        'No hay detalles de venta disponibles o la cédula del cliente no está definida.'
+      );
+      this.isGeneratingPDF = false;
+      return;
+    }
+
+    const latexRequest: LatexRequest = JSON.parse(requestData);
+
+    this.ventaService.generarFacturaPdf(latexRequest).subscribe({
+      next: (blob: Blob) => {
+        console.log('PDF generado exitosamente.');
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        alert('La factura se ha descargado correctamente.');
+        this.isGeneratingPDF = false;
+      },
+      error: (error) => {
+        console.error('Error al generar el PDF:', error);
+        alert(
+          'Error al generar la factura. Por favor, verifica con el administrador. Detalle: ' +
+            (error.message || error)
+        );
+        this.isGeneratingPDF = false;
+      },
+    });
+  }
 }

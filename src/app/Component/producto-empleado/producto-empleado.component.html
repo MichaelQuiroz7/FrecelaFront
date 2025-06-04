@@ -62,14 +62,13 @@
         <p>Precio: ${{ producto.precio }}</p>
         <p>Stock: {{ producto.stock }}</p>
         <button class="edit-btn" (click)="abrirModalEditar(producto)">
-            Editar
-          </button>
+          Editar
+        </button>
         <div
           class="product-actions"
           *ngIf="userRole === '1'"
           (click)="$event.stopPropagation()"
         >
-          
           <button class="delete-btn" (click)="confirmarEliminar(producto)">
             Eliminar
           </button>
@@ -530,7 +529,11 @@
               <button class="delete-btn" title="Eliminar (Sin funcionalidad)">
                 🗑️
               </button>
-              <button class="more-btn" title="Más (Sin funcionalidad)">
+              <button
+                class="more-btn"
+                title="Agregar Descuento"
+                (click)="abrirModalAgregarDescuento(empleado)"
+              >
                 ➕
               </button>
             </div>
@@ -540,60 +543,129 @@
     </div>
   </div>
 
-  <!-- Modal para detalles de venta -->
+ 
+<!-- Modal para detalles de venta -->
+<div
+  class="modal sale-details"
+  *ngIf="showSaleDetailsModal"
+  (click)="cerrarModalSaleDetails()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles de la Venta</h2>
+      <button class="modal-close" (click)="cerrarModalSaleDetails()">
+        ✖
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="saleDetailsError" class="error-message">
+        {{ saleDetailsError }}
+      </div>
+      <div *ngIf="saleDetails">
+        <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
+        <p>
+          <strong>Descripción:</strong>
+          {{ saleDetails.descripcionProducto || "N/A" }}
+        </p>
+        <p>
+          <strong>Precio Unitario:</strong> ${{ saleDetails.precioUnitario || "N/A" }}
+        </p>
+        <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
+        <p>
+          <strong>Precio Total (sin descuento):</strong> ${{ saleDetails.precioTotal || "N/A" }}
+        </p>
+        <div class="form-group">
+          <label>Descuento (%):</label>
+          <select
+            id="descuento"
+            class="form-control discount-select"
+            [ngModel]="selectedDescuento"
+            (ngModelChange)="onDescuentoChange($event)"
+          >
+            <option *ngFor="let descuento of descuentos" [value]="descuento">
+              {{ descuento }}
+            </option>
+          </select>
+        </div>
+        <p>
+          <strong>Subtotal (con descuento):</strong> ${{ calcularPrecioTotalConDescuento() | number : "1.2-2" }}
+        </p>
+        <p>
+          <strong>IVA (14%):</strong> ${{ calcularIVA() | number : "1.2-2" }}
+        </p>
+        <p>
+          <strong>Total (con IVA):</strong> ${{ calcularTotalConIVA() | number : "1.2-2" }}
+        </p>
+        <p>
+          <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
+          {{ saleDetails.apellidosCliente }}
+        </p>
+        <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
+        <!-- Indicador de carga -->
+        <div *ngIf="isGeneratingPDF" class="loading-bar">
+          <div class="spinner"></div>
+          <span>Generando PDF...</span>
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="cerrarModalSaleDetails()">Cerrar</button>
+          <button class="save-btn" (click)="generarOrdenPago()">Generar Orden de Pago</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Modal para añadir descuento a empleado -->
   <div
-    class="modal sale-details"
-    *ngIf="showSaleDetailsModal"
-    (click)="cerrarModalSaleDetails()"
+    class="modal add-discount"
+    *ngIf="showAddDiscountModal"
+    (click)="cerrarModalAgregarDescuento()"
   >
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Detalles de la Venta</h2>
-        <button class="modal-close" (click)="cerrarModalSaleDetails()">
+        <h2>Agregar Descuento a Empleado</h2>
+        <button class="modal-close" (click)="cerrarModalAgregarDescuento()">
           ✖
         </button>
       </div>
       <div class="modal-body">
-        <div *ngIf="saleDetailsError" class="error-message">
-          {{ saleDetailsError }}
+        <div class="form-group">
+          <label>Cédula:</label>
+          <input
+            type="text"
+            [value]="empleadoSeleccionado?.cedula || ''"
+            class="form-control"
+            readonly
+          />
         </div>
-        <div *ngIf="saleDetails">
-          <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
-          <p>
-            <strong>Descripción:</strong>
-            {{ saleDetails.descripcionProducto || "N/A" }}
-          </p>
-          <p>
-            <strong>Precio Unitario:</strong> ${{
-              saleDetails.precioUnitario || "N/A"
-            }}
-          </p>
-          <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
-          <p>
-            <strong>Precio Total (sin descuento):</strong> ${{
-              saleDetails.precioTotal || "N/A"
-            }}
-          </p>
-          <div class="form-group">
-            <label>Descuento (%):</label>
-            <select id="descuento" class="form-control discount-select"
-              [ngModel]="selectedDescuento"
-              (ngModelChange)="onDescuentoChange($event)"
-              >
-              <option *ngFor="let descuento of descuentos" [value]="descuento">{{descuento}}</option>
-            </select>
-          </div>
-          <p>
-            <strong>Precio Total (con descuento):</strong> ${{
-              calcularPrecioTotalConDescuento() | number : "1.2-2"
-            }}
-          </p>
-          <p>
-            <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
-            {{ saleDetails.apellidosCliente }}
-          </p>
-          <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
+        <div class="form-group">
+          <label>Nombre:</label>
+          <input
+            type="text"
+            [value]="
+              (empleadoSeleccionado?.nombres || '') +
+              ' ' +
+              (empleadoSeleccionado?.apellidos || '')
+            "
+            class="form-control"
+            readonly
+          />
         </div>
+        <div class="form-group">
+          <label>Descuento (%):</label>
+          <input
+            type="number"
+            [(ngModel)]="nuevoDescuento"
+            min="0"
+            max="100"
+            class="form-control"
+            placeholder="Ingrese el porcentaje de descuento"
+          />
+        </div>
+        <button class="save-btn" (click)="guardarDescuento()">Confirmar</button>
+        <button class="cancel-btn" (click)="cerrarModalAgregarDescuento()">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
