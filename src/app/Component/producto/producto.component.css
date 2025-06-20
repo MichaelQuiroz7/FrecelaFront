@@ -421,6 +421,110 @@ body, html {
   font-size: 1.1em;
 }
 
+/* Estilos para el modal de ingreso de código */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-size: 1em;
+  color: #264A6C;
+  font-weight: bold;
+}
+
+.form-group input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.form-group button {
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.form-group button:hover {
+  background-color: #218838;
+}
+
+.error-message {
+  color: #d33;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+/* Estilos para el modal de detalles de venta */
+.sale-details .modal-content {
+  max-width: 600px;
+}
+
+.sale-details .modal-body p {
+  margin: 5px 0;
+  font-size: 1em;
+  color: #333;
+}
+
+.sale-details .modal-body p strong {
+  color: #264A6C;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  background-color: #d33;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #a00;
+}
+
+.save-btn {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-btn:hover {
+  background-color: #218838;
+}
+
+.save-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilos para el modal de subir comprobante */
+.modal-body .form-group input[type="file"] {
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -475,8 +579,6 @@ body, html {
     height: auto;
   }
 
-  
-
   .panel-detalles {
     width: 100% !important;
     position: fixed;
@@ -508,4 +610,60 @@ body, html {
   .empleado-card {
     max-width: 300px;
   }
+
+  .form-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-group input,
+  .form-group button {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+  }
+
+
+
+ .stats .modal-content {
+  width: 800px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stats-content h3 {
+  color: #2c3e50;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.stats-content p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats .modal-content {
+    width: 90%;
+  }
+}
+
 }

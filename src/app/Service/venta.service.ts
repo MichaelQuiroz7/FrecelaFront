@@ -8,11 +8,14 @@ import { DetalleVentaRequest, LatexRequest, Venta } from '../Model/venta';
   providedIn: 'root'
 })
 export class VentaService {
+  
 
   private myAppUrl = environment.endpoint;
   private myApiUrl = 'api/Venta/RegistrarPedido';
   private myApiUrl2 = 'api/Venta/detallePedido';
   private myApiUrl3 = 'api/Venta/convert-to-pdf';
+  private myApiUrl4 = 'api/Venta/registrarPago';
+  private myApiUrl5 = 'api/Venta/estadisticasMes'
 
   constructor(private http: HttpClient) {}
 
@@ -27,5 +30,13 @@ export class VentaService {
   generarFacturaPdf(request: LatexRequest): Observable<Blob> {
     return this.http.post(`${this.myAppUrl}${this.myApiUrl3}`, request, { responseType: 'blob' });
   }
+
+  subirComprobante(formData: FormData) {
+    return this.http.post(`${this.myAppUrl}${this.myApiUrl4}`, formData);
+  }
   
+  getEstadisticasVentasPorMes(): Observable<any> {
+    return this.http.get(`${this.myAppUrl}${this.myApiUrl5}`);
+  }
+
 }

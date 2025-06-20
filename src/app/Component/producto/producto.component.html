@@ -1,7 +1,6 @@
 <!-- HEADER -->
 <header class="header">
-      <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
-
+  <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
   <div class="header-left">
     <h1>Catálogo de Productos</h1>
     <p class="welcome-message" *ngIf="clienteNombre">Bienvenido, {{ clienteNombre }}</p>
@@ -10,7 +9,6 @@
     <button class="action-button" (click)="consultarPedidos()">Consultar Pedidos</button>
     <button class="action-button logout-button" (click)="cerrarSesion()">Cerrar Sesión</button>
   </div>
-
 </header>
 
 <div class="filtrosBusqueda">
@@ -47,6 +45,9 @@
       </a>
     </div>
   </div>
+
+  <!-- Botón para buscar pedido por ID -->
+  <!-- <button class="action-button" (click)="buscarPorIdVenta()">Buscar Pedido por ID</button> -->
 
   <!-- Botón para limpiar filtros -->
   <button
@@ -161,3 +162,176 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para ingresar código de pedido (Funcionalidad Existente) -->
+<div class="modal" *ngIf="showSaleDetailsModal" (click)="cerrarModalSaleDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Consultar Pedido</h2>
+      <button class="modal-close" (click)="cerrarModalSaleDetails()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="saleCode">Ingrese el código del pedido:</label>
+        <input type="text" id="saleCode" [(ngModel)]="saleCode" (keyup.enter)="buscarVenta()" />
+        <button class="action-button" (click)="buscarVenta()">Aceptar</button>
+      </div>
+      <div *ngIf="saleDetailsError" class="error-message">
+        {{ saleDetailsError }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para detalles de venta (Funcionalidad Existente) -->
+<div
+  class="modal sale-details"
+  *ngIf="showSaleDetailsModal && saleDetails"
+  (click)="cerrarModalSaleDetails()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles de la Venta</h2>
+      <button class="modal-close" (click)="cerrarModalSaleDetails()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="saleDetailsError" class="error-message">
+        {{ saleDetailsError }}
+      </div>
+      <div *ngIf="saleDetails">
+        <p><strong>Código:</strong> {{ saleDetails.code }}</p>
+        <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
+        <p><strong>Descripción:</strong> {{ saleDetails.descripcionProducto || "N/A" }}</p>
+        <p><strong>Precio Unitario:</strong> ${{ saleDetails.precioUnitario || "N/A" }}</p>
+        <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
+        <p><strong>Precio Total (sin descuento):</strong> ${{ saleDetails.precioTotal || "N/A" }}</p>
+        <p><strong>Descuento (5% fijo):</strong> {{ saleDetails.precioTotal != null ? (saleDetails.precioTotal * 0.05 | number:'1.2-2') : "N/A" }}</p>
+        <p><strong>Subtotal (con descuento):</strong> ${{ calcularPrecioTotalConDescuento() | number : "1.2-2" }}</p>
+        <p><strong>IVA (14%):</strong> ${{ calcularIVA() | number : "1.2-2" }}</p>
+        <p><strong>Total (con IVA):</strong> ${{ calcularTotalConIVA() | number : "1.2-2" }}</p>
+        <p><strong>Cliente:</strong> {{ saleDetails.nombresCliente }} {{ saleDetails.apellidosCliente }}</p>
+        <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="cerrarModalSaleDetails()">Cancelar</button>
+          <button class="save-btn" (click)="showPaymentModal = true">Pagar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para subir comprobante (Funcionalidad Existente) -->
+<div class="modal" *ngIf="showPaymentModal" (click)="showPaymentModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Subir Comprobante de Transferencia</h2>
+      <button class="modal-close" (click)="showPaymentModal = false">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="comprobanteFile">Seleccione el comprobante (imagen):</label>
+        <input type="file" id="comprobanteFile" (change)="onFileSelected($event)" accept="image/*" />
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="showPaymentModal = false">Cancelar</button>
+        <button class="save-btn" (click)="subirComprobanteIdVenta()" [disabled]="!selectedFile">Subir comprobante</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Nuevo Modal para buscar pedido por ID de Venta -->
+<!-- <div class="modal" *ngIf="showIdVentaModal" (click)="cerrarModalIdVenta()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Buscar Pedido por ID</h2>
+      <button class="modal-close" (click)="cerrarModalIdVenta()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="idVenta">Ingrese el ID del pedido:</label>
+        <input
+          type="number"
+          id="idVenta"
+          [(ngModel)]="idVenta"
+          (keyup.enter)="buscarPorIdVentaConfirm()"
+          min="1"
+          placeholder="Ej: 123"
+        />
+        <button class="action-button" (click)="buscarPorIdVentaConfirm()">Buscar</button>
+      </div>
+      <div *ngIf="idVentaError" class="error-message">
+        {{ idVentaError }}
+      </div>
+      
+      <div *ngIf="idVentaDetails" class="sale-details">
+        <p><strong>Código:</strong> {{ idVentaDetails.code }}</p>
+        <p><strong>Producto:</strong> {{ idVentaDetails.nombreProducto }}</p>
+        <p><strong>Descripción:</strong> {{ idVentaDetails.descripcionProducto || "N/A" }}</p>
+        <p><strong>Precio Unitario:</strong> ${{ idVentaDetails.precioUnitario || "N/A" }}</p>
+        <p><strong>Cantidad:</strong> {{ idVentaDetails.cantidad || "N/A" }}</p>
+        <p><strong>Precio Total (sin descuento):</strong> ${{ idVentaDetails.precioTotal || "N/A" }}</p>
+        <p><strong>Descuento (5% fijo):</strong> {{ idVentaDetails.precioTotal != null ? (idVentaDetails.precioTotal * 0.05 | number:'1.2-2') : "N/A" }}</p>
+        <p><strong>Subtotal (con descuento):</strong> ${{ calcularPrecioTotalConDescuentoIdVenta() | number : "1.2-2" }}</p>
+        <p><strong>IVA (15%):</strong> ${{ calcularIVAIdVenta() | number : "1.2-2" }}</p>
+        <p><strong>Total (con IVA):</strong> ${{ calcularTotalConIVAIdVenta() | number : "1.2-2" }}</p>
+        <p><strong>Cliente:</strong> {{ idVentaDetails.nombresCliente }} {{ idVentaDetails.apellidosCliente }}</p>
+        <p><strong>Cédula:</strong> {{ idVentaDetails.cedulaCliente }}</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="cerrarModalIdVenta()">Cancelar</button>
+          <button class="save-btn" (click)="abrirModalPagoIdVenta()">Pagar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+<!-- Nuevo Modal para subir comprobante por ID de Venta
+<div class="modal" *ngIf="showIdVentaPaymentModal" (click)="cerrarModalPagoIdVenta()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Subir Comprobante de Transferencia</h2>
+      <button class="modal-close" (click)="cerrarModalPagoIdVenta()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="idVentaComprobanteFile">Seleccione el comprobante (imagen):</label>
+        <input
+          type="file"
+          id="idVentaComprobanteFile"
+          (change)="onIdVentaFileSelected($event)"
+          accept="image/*"
+        />
+      </div>
+      <div class="form-group">
+        <label for="idVentaComprobanteFecha">Fecha:</label>
+        <input
+          type="date"
+          id="idVentaComprobanteFecha"
+          [(ngModel)]="idVentaComprobanteFecha"
+        />
+      </div>
+      <div class="form-group">
+        <label for="idVentaComprobanteHora">Hora:</label>
+        <input
+          type="time"
+          id="idVentaComprobanteHora"
+          [(ngModel)]="idVentaComprobanteHora"
+        />
+      </div>
+      <div *ngIf="idVentaComprobanteError" class="error-message">
+        {{ idVentaComprobanteError }}
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="cerrarModalPagoIdVenta()">Cancelar</button>
+        <button
+          class="save-btn"
+          (click)="subirComprobanteIdVenta()"
+          [disabled]="!idVentaSelectedFile || !idVentaComprobanteFecha || !idVentaComprobanteHora"
+        >
+          Subir
+        </button>
+      </div>
+    </div>
+  </div>
+</div> -->

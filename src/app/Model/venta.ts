@@ -11,6 +11,7 @@ export interface DetalleVentaRequest {
 }
 
 export interface DetalleVentaResponse {
+  precio: any;
   code: string;
   message: string;
   nombreProducto: string;

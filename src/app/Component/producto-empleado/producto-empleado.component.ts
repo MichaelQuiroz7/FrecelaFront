@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef} from '@angular/core';
 import { ProductosService } from '../../Service/productos.service';
 import { CommonModule } from '@angular/common';
 import {
@@ -27,6 +27,8 @@ import {
   LatexRequest,
 } from '../../Model/venta';
 import { VentaService } from '../../Service/venta.service';
+import { Chart } from 'chart.js/auto';
+import { FilterByMonthPipe } from "../Pipes/FilterByMonthPipe";
 
 @Component({
   selector: 'app-producto-empleado',
@@ -38,6 +40,8 @@ import { VentaService } from '../../Service/venta.service';
 export class ProductoEmpleadoComponent {
 
   isGeneratingPDF: boolean = false;
+  showStatsModal: boolean = false;
+  selectedMonth: number = new Date().getMonth() + 1;
 
   showEditModal: boolean = false;
   showStockModal: boolean = false;
@@ -100,6 +104,19 @@ export class ProductoEmpleadoComponent {
   nuevoDescuento: number | null = null;
   subtotalIVA: number;
   porcentajeDescuento: number;
+  estadisticas: any = null;
+
+  months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  @ViewChild('productsChart', { static: false }) productsChartRef!: ElementRef;
+  @ViewChild('clientsChart', { static: false }) clientsChartRef!: ElementRef;
+  @ViewChild('employeesChart', { static: false }) employeesChartRef!: ElementRef;
+  private productsChart: Chart | undefined;
+  private clientsChart: Chart | undefined;
+  private employeesChart: Chart | undefined;
 
   constructor(
     private productosService: ProductosService,
@@ -136,6 +153,7 @@ export class ProductoEmpleadoComponent {
     this.checkUserRole();
     this.obtenerEmpleados();
     this.obtenerDescuentos();
+    this.cargarTodasLasEstadisticas();
   }
 
   obtenerDescuentos() {
@@ -621,11 +639,6 @@ export class ProductoEmpleadoComponent {
     });
   }
 
-  // // New methods for employee management
-  // abrirModalAdministrarEmpleados(): void {
-  //   this.showManageEmployeesModal = true;
-  // }
-
   cerrarModalAdministrarEmpleados(): void {
     this.showManageEmployeesModal = false;
   }
@@ -667,6 +680,7 @@ export class ProductoEmpleadoComponent {
     this.ventaService.getDetalleVenta(request).subscribe({
       next: (response: any) => {
         this.saleDetails = response;
+        console.log('Detalles de la venta:', this.saleDetails);
         this.saleDetailsError = null;
         this.showSaleDetailsModal = true;
       },
@@ -825,7 +839,7 @@ generarOrdenPago(): void {
     Fecha: fecha,
     Productos: [
       {
-        Codigo: 'N/A',
+        Codigo: this.saleDetails.code || 'N/A',
         Descripcion: this.saleDetails.nombreProducto || 'N/A',
         Cantidad: this.saleDetails.cantidad || 0,
         PrecioUnitario: this.saleDetails.precioUnitario || 0,
@@ -882,4 +896,175 @@ generarOrdenPago(): void {
       },
     });
   }
+
+
+   // Nuevo método para obtener estadísticas
+  obtenerEstadisticas(): void {
+    this.ventaService.getEstadisticasVentasPorMes().subscribe({
+      next: (response: any) => {
+        this.estadisticas = response.data; // Asume que los datos están en response.data
+        console.log('Estadísticas obtenidas:', this.estadisticas);
+        this.showStatsModal = true;
+      },
+      error: (error) => {
+        console.error('Error al obtener las estadísticas:', error);
+        alert('Error al obtener las estadísticas. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+  cerrarModalEstadisticas(): void {
+    this.showStatsModal = false;
+    this.estadisticas = null;
+  }
+
+
+  onMonthChange(event: any): void {
+  this.selectedMonth = Number(event);
+  this.updateCharts();
+}
+
+
+  private updateCharts(): void {
+  this.destroyCharts();
+
+  if (!this.estadisticas || !this.productsChartRef || !this.clientsChartRef || !this.employeesChartRef) {
+    console.warn('Datos o referencias de gráficos no disponibles');
+    return;
+  }
+
+  const productsData = this.getChartData('productos_por_mes', 'cantidad_vendida', 'producto');
+  if (productsData.labels.length > 0) {
+    this.productsChart = new Chart(this.productsChartRef.nativeElement, {
+      type: 'bar',
+      data: productsData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: `Productos Vendidos - ${this.months[this.selectedMonth - 1]}` }
+        }
+      }
+    });
+  }
+
+  const clientsData = this.getChartData('clientes_por_mes', 'numero_compras', 'cliente');
+  if (clientsData.labels.length > 0) {
+    this.clientsChart = new Chart(this.clientsChartRef.nativeElement, {
+      type: 'bar',
+      data: clientsData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: `Compras por Cliente - ${this.months[this.selectedMonth - 1]}` }
+        }
+      }
+    });
+  }
+
+  const employeesData = this.getChartData('empleados_por_mes', 'numero_ventas', 'empleado');
+  if (employeesData.labels.length > 0) {
+    this.employeesChart = new Chart(this.employeesChartRef.nativeElement, {
+      type: 'bar',
+      data: employeesData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: `Ventas por Empleado - ${this.months[this.selectedMonth - 1]}` }
+        }
+      }
+    });
+  }
+}
+  
+
+private getChartData(section: string, valueKey: string, labelKey: string): any {
+  if (!this.estadisticas || !this.estadisticas[section]) {
+    console.warn(`No hay datos disponibles para ${section}`);
+    return { labels: [], datasets: [] };
+  }
+
+  const filteredData = this.estadisticas[section].filter((item: any) => item.mes === this.selectedMonth);
+  console.log(`Datos filtrados para ${section}:`, filteredData); // Depuración
+
+  if (filteredData.length === 0) {
+    console.warn(`No se encontraron datos para el mes ${this.selectedMonth} en ${section}`);
+    return { labels: [], datasets: [] };
+  }
+
+  const labels = filteredData.flatMap((item: any) => item[labelKey].map((x: any) => x[labelKey]));
+  const data = filteredData.flatMap((item: any) => item[labelKey].map((x: any) => x[valueKey]));
+
+  return {
+    labels: labels,
+    datasets: [{
+      label: `Cantidad ${valueKey.replace('_', ' ')}`,
+      data: data,
+      backgroundColor: 'rgba(54, 162, 235, 0.6)',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 1
+    }]
+  };
+}
+  
+
+
+
+
+  private destroyCharts(): void {
+    if (this.productsChart) this.productsChart.destroy();
+    if (this.clientsChart) this.clientsChart.destroy();
+    if (this.employeesChart) this.employeesChart.destroy();
+  }
+
+ 
+  mesesDisponibles: string[] = [];
+  mesSeleccionado: string = '';
+   monthsInSpanish = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+
+  
+
+  cargarTodasLasEstadisticas() {
+    this.ventaService.getEstadisticasVentasPorMes().subscribe(response => {
+      this.estadisticas = response.data;
+      console.log('Estadísticas obtenidas:', this.estadisticas);
+
+      this.mesesDisponibles = this.estadisticas.estadisticas_generales.map((e: any) => e.nombre_mes);
+      this.mesesDisponibles = [...new Set(this.mesesDisponibles)];
+
+      if (this.mesesDisponibles.length > 0) {
+        this.mesSeleccionado = this.mesesDisponibles[0];
+      }
+    });
+  }
+
+
+   obtenerDatosDelMes(mes: string) {
+    const productos = this.estadisticas.productos_por_mes.find((p: any) => p.nombre_mes === mes);
+    const clientes = this.estadisticas.clientes_por_mes.find((c: any) => c.nombre_mes === mes);
+    const empleados = this.estadisticas.empleados_por_mes.find((e: any) => e.nombre_mes === mes);
+    const general = this.estadisticas.estadisticas_generales.find((g: any) => g.nombre_mes === mes);
+    return { productos, clientes, empleados, general };
+  }
+
+  mostrarModal: boolean = false;
+
+abrirModal() {
+  this.mostrarModal = true;
+}
+
+cerrarModal() {
+  this.mostrarModal = false;
+}
+
+
+
+
+
 }
