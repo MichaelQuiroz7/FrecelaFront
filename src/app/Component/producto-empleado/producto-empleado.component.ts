@@ -369,44 +369,44 @@ export class ProductoEmpleadoComponent {
     }
   }
 
-  subirImagenes(isAddModal: boolean): void {
-    if (this.selectedImages.length === 0) {
-      alert('No hay imágenes seleccionadas para subir.');
-      return;
-    }
-
-    const idProducto = isAddModal
-      ? this.nuevoProducto.idProducto
-      : this.productoEditado.idProducto;
-
-    if (!idProducto && isAddModal) {
-      alert('Por favor, guarda el producto primero antes de subir imágenes.');
-      return;
-    }
-
-    const formData = new FormData();
-    this.selectedImages.forEach((image) => {
-      formData.append('Imagenes[]', image);
-    });
-    formData.append('IdProducto', idProducto.toString());
-
-    this.productosService.uploadImages(formData).subscribe({
-      next: (imageResponse: any) => {
-        const newImages = imageResponse.data.map((img: any) => ({
-          idImagen: img.idImagen,
-          idProducto: idProducto,
-          imagenUrl: img.imagenUrl,
-        }));
-        this.imagenes.push(...newImages);
-        this.selectedImages = [];
-        alert('Imágenes subidas exitosamente.');
-      },
-      error: (error) => {
-        console.error('Error al subir las imágenes:', error);
-        alert('Error al subir las imágenes. Por favor, intenta de nuevo.');
-      },
-    });
+ subirImagenes(isAddModal: boolean): void {
+  if (this.selectedImages.length === 0) {
+    alert('No hay imágenes seleccionadas para subir.');
+    return;
   }
+
+  const idProducto = isAddModal
+    ? this.nuevoProducto.idProducto
+    : this.productoEditado.idProducto;
+
+  if (!idProducto && isAddModal) {
+    alert('Por favor, guarda el producto primero antes de subir imágenes.');
+    return;
+  }
+
+  const formData = new FormData();
+  this.selectedImages.forEach((image) => {
+    formData.append('Imagenes', image); 
+  });
+  formData.append('IdProducto', idProducto.toString()); 
+
+  this.productosService.uploadImages(formData).subscribe({
+    next: (imageResponse: any) => {
+      const newImages = imageResponse.data.map((img: any) => ({
+        idImagen: img.idImagen,
+        idProducto: idProducto,
+        imagenUrl: img.imagenUrl,
+      }));
+      this.imagenes.push(...newImages);
+      this.selectedImages = [];
+      alert('Imágenes subidas exitosamente.');
+    },
+    error: (error) => {
+      console.error('Error al subir las imágenes:', error);
+      alert('Error al subir las imágenes. Por favor, intenta de nuevo.');
+    },
+  });
+}
 
   guardarEdicion(): void {
     this.productosService.actualizarProducto(this.productoEditado).subscribe({
@@ -780,7 +780,12 @@ export class ProductoEmpleadoComponent {
 calcularTotalConIVA(): number {
   const subtotal = this.calcularPrecioTotalConDescuento();
   const iva = this.calcularIVA();
-  return subtotal + iva;
+  if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
+    return subtotal + iva + 5; // Añadir $5 de costo de envío
+  }else{
+    return subtotal + iva;
+  }
+  
 }
 
 calcularIVAInicial(precioTotalConIVA: number): number {

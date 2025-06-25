@@ -134,65 +134,54 @@ body, html {
   display: block;
 }
 
-.contenedor-galeria {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-  transition: all 0.5s ease;
-}
 
-.productos-container {
-  display: flex;
-  width: 100%;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: space-evenly;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.producto {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 17%;
-  height: 150px;
-  min-width: 150px;
-  margin: 10px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  text-align: center;
-  border-radius: 12px;
-}
 
 .producto:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.producto-imgSelec {
-  width: 40%;
-  height: 35%;
-  object-fit: contain;
-  border-radius: 20px;
-  border: 2px solid #000;
-  margin-bottom: 10px;
-  max-height: 35%;
-  max-width: 40%;
-  transition: transform 0.3s ease;
+.image-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Espacio entre los botones y el contenedor de la imagen */
+  width: 100%; /* O ajusta al ancho deseado */
 }
 
-.producto h3 {
-  font-size: 15px;
-  margin: 10px 0 0 0;
-  margin-top: auto;
+.imagen-contenedor {
+  position: relative;
+  width: 200px; 
+  height: 150px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #000;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background-color: #f5f5f5;
+}
+
+
+.producto-imgSelec {
+  max-width: 100%; 
+  max-height: 100%; 
+  object-fit: contain; 
+  transition: opacity 0.3s ease; 
+}
+
+.nav-arrow {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.nav-arrow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .producto img {
@@ -260,6 +249,41 @@ body, html {
   border: 1px solid #ccc;
 }
 
+
+.image-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 10px 0;
+}
+
+.nav-arrow {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #264A6C;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.3s ease;
+}
+
+.nav-arrow:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.nav-arrow.left {
+  margin-right: 10px;
+}
+
+.nav-arrow.right {
+  margin-left: 10px;
+}
+
+.nav-arrow:hover:not(:disabled) {
+  color: #1a3c5a;
+}
 .precio-total p {
   font-size: 1.1em;
   font-weight: bold;
@@ -421,6 +445,70 @@ body, html {
   font-size: 1.1em;
 }
 
+.contenedor-galeria {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  transition: all 0.5s ease;
+}
+
+.productos-container {
+  display: grid;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  justify-items: center;
+  height: auto;
+}
+
+.producto {
+  width: 100%;
+  max-width: 280px;
+  height: 300px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.producto:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.producto-img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  object-position: center;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.productName {
+  text-align: center;
+  padding: 10px;
+  font-size: 1.2rem;
+  color: #333;
+  margin: 0;
+  width: 100%;
+}
+
 /* Estilos para el modal de ingreso de código */
 .form-group {
   display: flex;
@@ -569,16 +657,7 @@ body, html {
     font-size: 14px;
   }
 
-  .productos-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .producto {
-    width: 90%;
-    height: auto;
-  }
-
+  
   .panel-detalles {
     width: 100% !important;
     position: fixed;

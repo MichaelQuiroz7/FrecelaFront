@@ -326,6 +326,9 @@ export class ProductoComponent implements OnInit {
   showPaymentModal: boolean = false; // Modal para subir comprobante
   comprobante: Comprobante = new Comprobante();
   selectedFile: File | null = null;
+  filteredImages: any[] = [];
+  currentImageIndex: number = 0;
+  maxImageIndex: number = 0;
 
   // Nuevas propiedades para búsqueda por ID
   showIdVentaModal: boolean = false;
@@ -337,6 +340,7 @@ export class ProductoComponent implements OnInit {
   idVentaComprobanteFecha: Date | null = null;
   idVentaComprobanteHora: string | null = null;
   idVentaComprobanteError: string | null = null;
+tipoEntrega: any;
 
   constructor(
     private productosService: ProductosService,
@@ -392,11 +396,48 @@ export class ProductoComponent implements OnInit {
 
   seleccionarProducto(producto: Producto): void {
     this.productoSeleccionado = producto;
+    this.cantidad = 1;
+    this.currentImageIndex = 0;
+    this.filtrarImagenes(); // Filtra las imágenes al seleccionar un producto
+  }
+
+  filtrarImagenes(): void {
+    if (this.productoSeleccionado) {
+      this.filteredImages = this.imagenes.filter(img => img.idProducto === this.productoSeleccionado?.idProducto);
+      this.actualizarMaxImageIndex();
+    } else {
+      this.filteredImages = [];
+    }
+  }
+
+  obtenerImagenActual(): string {
+    return this.filteredImages[this.currentImageIndex]?.imagenUrl || 'assets/no-image.jpg';
+  }
+
+  prevImage(): void {
+    if (this.currentImageIndex > 0) {
+      this.currentImageIndex--;
+    }
+  }
+
+  nextImage(): void {
+    if (this.currentImageIndex < this.maxImageIndex) {
+      this.currentImageIndex++;
+    }
+  }
+
+  actualizarMaxImageIndex(): void {
+    this.maxImageIndex = this.filteredImages.length - 1;
+    if (this.currentImageIndex > this.maxImageIndex) {
+      this.currentImageIndex = this.maxImageIndex;
+    }
   }
 
   cerrarPanel(): void {
     this.productoSeleccionado = null;
-    this.cantidad = 1;
+    this.filteredImages = [];
+    this.currentImageIndex = 0;
+    this.maxImageIndex = 0;
   }
 
   agregarProducto(): void {
@@ -521,9 +562,15 @@ export class ProductoComponent implements OnInit {
       return;
     }
 
+    if (!this.tipoEntrega) {
+      alert('Por favor, selecciona un tipo de entrega.');
+      this.cerrarModal();
+      return;
+    }
+
     const clienteData = localStorage.getItem('cliente');
     if (!clienteData) {
-      console.error('No hay datos de cliente en localStorage');
+      alert('Por favor, inicia sesión.');
       this.cerrarModal();
       return;
     }
@@ -539,14 +586,36 @@ export class ProductoComponent implements OnInit {
       PrecioUnitario: this.productoSeleccionado.precio,
     };
 
+    
+
     this.ventaService.registrarPedido(venta).subscribe({
       next: (response: any) => {
         if (response.code === '01') {
+          console.log('Venta registrada exitosamente:', response);
           const ventaId = response.message.split('ID de venta: ')[1] || 'Desconocido';
           let phone = empleado.telefono?.replace(/[\s-]/g, '') || '';
           if (phone && !phone.startsWith('+')) {
             phone = '+593' + phone;
           }
+
+          this.ventaService.registarTipoEntrega({
+            IdVenta : parseInt(atob(ventaId)),
+            TipoEntrega: this.tipoEntrega,
+            CostoEntrega: 0, 
+            Direccion: localStorage.getItem('cliente') || 'No especificada',
+          }).subscribe({
+            next: (tipoEntregaResponse: any) => {
+              console.log('Tipo de entrega registrado:', tipoEntregaResponse);  
+              console.log('Direccion de entrega:', cliente.direccion || 'No especificada');
+            },
+            error: (error) => {
+            console.error('Error al registrar el tipo de pedido:', error);
+            this.cerrarModal();
+      },
+
+          });
+
+          // Preparar el mensaje para WhatsApp
 
           const productoNombre = this.productoSeleccionado!.nombre;
           const precioUnitario = this.productoSeleccionado!.precio.toFixed(2);
@@ -575,6 +644,9 @@ export class ProductoComponent implements OnInit {
         this.cerrarModal();
       },
     });
+
+    
+
   }
 
   consultarPedidos(): void {
@@ -602,7 +674,7 @@ export class ProductoComponent implements OnInit {
       next: (response: any) => {
         this.saleDetails = response;
         this.idVentaDetails = response.code;
-        console.log('Detalles id de la venta:', this.idVentaDetails);
+        console.log('Detalles id de la venta:', this.saleDetails);
         this.saleDetailsError = null;
       },
       error: (error) => {
@@ -750,6 +822,9 @@ export class ProductoComponent implements OnInit {
 //     this.showIdVentaModal = true;
 //   }
 
+
+//#REGION CALCULOS
+
   calcularIVA(): number {
     if (!this.saleDetails || !this.saleDetails.precioTotal) return 0;
     const subtotalSinIVA = this.saleDetails.precioTotal / 1.14; // Invertir el 14% IVA
@@ -776,15 +851,23 @@ export class ProductoComponent implements OnInit {
   }
 
   calcularTotalConIVA(): number {
-    const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
-    return subtotalConDescuento * 1.14;
+  const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
+  let total = subtotalConDescuento * 1.15; // IVA del 15%
+  // Si el tipo de entrega es "ENTREGA A DOMICILIO", agregar $5.00 al total
+  if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
+    total += 5.00;
   }
+
+  return total;
+}
 
   calcularIVAIdVenta(): number {
     if (!this.idVentaDetails || !this.idVentaDetails.precioTotal) return 0;
-    const subtotalSinIVA = this.idVentaDetails.precioTotal / 1.14;
-    return subtotalSinIVA * 0.14;
+    const subtotalSinIVA = this.idVentaDetails.precioTotal / 1.15;
+    return subtotalSinIVA * 0.15; 
   }
+
+  //#ENDREGION
 
    cerrarSesion(): void {
     localStorage.removeItem('cliente');
@@ -792,3 +875,8 @@ export class ProductoComponent implements OnInit {
   }
 
 }
+
+
+
+
+

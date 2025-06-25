@@ -12,6 +12,7 @@ export class ProductosService {
   private myApiUrl = 'api/Producto';
   private myApiUrlImage = 'api/Imagen';
   private myApiUrl2 = 'stock';
+  private myApiUrl3 = 'api/Imagen/SubirImagenes';
 
   constructor(private http: HttpClient) {}
 
@@ -61,8 +62,12 @@ export class ProductosService {
   return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagen`, formData);
 }
 
+//   uploadImages(formData: FormData): Observable<any> {
+// return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagenes`, formData);
+//   }
+
   uploadImages(formData: FormData): Observable<any> {
-return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagenes`, formData);
+return this.http.post(`${this.myAppUrl}${this.myApiUrl3}`, formData);
   }
 
   eliminarImagen(idImagen: number): Observable<any> {

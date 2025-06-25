@@ -47,6 +47,7 @@ export class LoginComponent {
           localStorage.setItem('cedula', response.data.cedula);
           localStorage.setItem('nombre', response.data.nombres);
           localStorage.setItem('apellido', response.data.apellidos);
+          localStorage.setItem('direccion', response.data.direccion);
           console.log('Inicio de sesión exitoso', response);
           this.router.navigate(['producto-empleado']);
         } else {

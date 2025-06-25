@@ -22,6 +22,9 @@ export interface DetalleVentaResponse {
   nombresCliente: string;
   apellidosCliente: string;
   cedulaCliente: string;
+  direccionCliente: string;
+  tipoEntrega: string;
+
 }
 
 export interface LatexRequest {
@@ -42,4 +45,11 @@ export interface ProductoRequest {
   Cantidad: number;
   PrecioUnitario: number;
   Total: number;
+}
+
+export interface Entrega{
+  IdVenta: number;
+  TipoEntrega: string;
+  CostoEntrega: number;
+  Direccion: string;
 }

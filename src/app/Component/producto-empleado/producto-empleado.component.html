@@ -45,14 +45,9 @@
       <span>Administrar Empleados</span>
     </div>
 
-    <div
-      class="action-card"
-      *ngIf="userRole === '1'"
-      (click)="abrirModal()"
-    >
+    <div class="action-card" *ngIf="userRole === '1'" (click)="abrirModal()">
       <span>Ver Estadísticas</span>
     </div>
-
   </div>
 
   <div class="product-grid">
@@ -552,78 +547,92 @@
     </div>
   </div>
 
- 
-<!-- Modal para detalles de venta -->
-<div
-  class="modal sale-details"
-  *ngIf="showSaleDetailsModal"
-  (click)="cerrarModalSaleDetails()"
->
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Detalles de la Venta</h2>
-      <button class="modal-close" (click)="cerrarModalSaleDetails()">
-        ✖
-      </button>
-    </div>
-    <div class="modal-body">
-      <div *ngIf="saleDetailsError" class="error-message">
-        {{ saleDetailsError }}
+  <!-- Modal para detalles de venta -->
+  <div
+    class="modal sale-details"
+    *ngIf="showSaleDetailsModal"
+    (click)="cerrarModalSaleDetails()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Detalles de la Venta</h2>
+        <button class="modal-close" (click)="cerrarModalSaleDetails()">
+          ✖
+        </button>
       </div>
-      <div *ngIf="saleDetails">
-        <p><strong>Código:</strong> {{ saleDetails.code }}</p>
-        <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
-        <p>
-          <strong>Descripción:</strong>
-          {{ saleDetails.descripcionProducto || "N/A" }}
-        </p>
-        <p>
-          <strong>Precio Unitario:</strong> ${{ saleDetails.precioUnitario || "N/A" }}
-        </p>
-        <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
-        <p>
-          <strong>Precio Total (sin descuento):</strong> ${{ saleDetails.precioTotal || "N/A" }}
-        </p>
-        <div class="form-group">
-          <label>Descuento (%):</label>
-          <select
-            id="descuento"
-            class="form-control discount-select"
-            [ngModel]="selectedDescuento"
-            (ngModelChange)="onDescuentoChange($event)"
-          >
-            <option *ngFor="let descuento of descuentos" [value]="descuento">
-              {{ descuento }}
-            </option>
-          </select>
+      <div class="modal-body">
+        <div *ngIf="saleDetailsError" class="error-message">
+          {{ saleDetailsError }}
         </div>
-        <p>
-          <strong>Subtotal (con descuento):</strong> ${{ calcularPrecioTotalConDescuento() | number : "1.2-2" }}
-        </p>
-        <p>
-          <strong>IVA (14%):</strong> ${{ calcularIVA() | number : "1.2-2" }}
-        </p>
-        <p>
-          <strong>Total (con IVA):</strong> ${{ calcularTotalConIVA() | number : "1.2-2" }}
-        </p>
-        <p>
-          <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
-          {{ saleDetails.apellidosCliente }}
-        </p>
-        <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
-        <!-- Indicador de carga -->
-        <div *ngIf="isGeneratingPDF" class="loading-bar">
-          <div class="spinner"></div>
-          <span>Generando PDF...</span>
-        </div>
-        <div class="modal-actions">
-          <button class="cancel-btn" (click)="cerrarModalSaleDetails()">Cerrar</button>
-          <button class="save-btn" (click)="generarOrdenPago()">Generar Orden de Pago</button>
+        <div *ngIf="saleDetails">
+          <p><strong>Código:</strong> {{ saleDetails.code }}</p>
+          <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
+          <p>
+            <strong>Descripción:</strong>
+            {{ saleDetails.descripcionProducto || "N/A" }}
+          </p>
+          <p>
+            <strong>Precio Unitario:</strong> ${{
+              saleDetails.precioUnitario || "N/A"
+            }}
+          </p>
+          <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
+          <p>
+            <strong>Precio Total (sin descuento):</strong> ${{
+              saleDetails.precioTotal || "N/A"
+            }}
+          </p>
+          <div class="form-group">
+            <label>Descuento (%):</label>
+            <select
+              id="descuento"
+              class="form-control discount-select"
+              [ngModel]="selectedDescuento"
+              (ngModelChange)="onDescuentoChange($event)"
+            >
+              <option *ngFor="let descuento of descuentos" [value]="descuento">
+                {{ descuento }}
+              </option>
+            </select>
+          </div>
+          <p>
+            <strong>Subtotal (con descuento):</strong> ${{
+              calcularPrecioTotalConDescuento() | number : "1.2-2"
+            }}
+          </p>
+          <p>
+            <strong>IVA (14%):</strong> ${{ calcularIVA() | number : "1.2-2" }}
+          </p>
+          <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
+            <p><strong>Envio:</strong> $ 5.00</p>
+          </div>
+          <p>
+            <strong>Total (con IVA):</strong> ${{
+              calcularTotalConIVA() | number : "1.2-2"
+            }}
+          </p>
+          <p>
+            <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
+            {{ saleDetails.apellidosCliente }}
+          </p>
+          <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
+          <!-- Indicador de carga -->
+          <div *ngIf="isGeneratingPDF" class="loading-bar">
+            <div class="spinner"></div>
+            <span>Generando PDF...</span>
+          </div>
+          <div class="modal-actions">
+            <button class="cancel-btn" (click)="cerrarModalSaleDetails()">
+              Cerrar
+            </button>
+            <button class="save-btn" (click)="generarOrdenPago()">
+              Generar Orden de Pago
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
   <!-- Modal para añadir descuento a empleado -->
   <div
@@ -680,68 +689,76 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" *ngIf="mostrarModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>Estadísticas de Ventas</h2>
+        <button class="cerrar-btn" (click)="cerrarModal()">X</button>
+      </div>
 
-<div class="modal-backdrop" *ngIf="mostrarModal">
-  <div class="modal-container">
-    <div class="modal-header">
-      <h2>Estadísticas de Ventas</h2>
-      <button class="cerrar-btn" (click)="cerrarModal()">X</button>
-    </div>
+      <div class="modal-body">
+        <label>Seleccionar Mes:</label>
+        <select [(ngModel)]="mesSeleccionado">
+          <option *ngFor="let mes of mesesDisponibles" [value]="mes">
+            {{ mes }}
+          </option>
+        </select>
 
-    <div class="modal-body">
-
-      <label>Seleccionar Mes:</label>
-      <select [(ngModel)]="mesSeleccionado">
-        <option *ngFor="let mes of mesesDisponibles" [value]="mes">{{ mes }}</option>
-      </select>
-
-      <ng-container *ngIf="mesSeleccionado">
-        <ng-container *ngIf="obtenerDatosDelMes(mesSeleccionado) as datos">
-
-          <h3>Productos del Mes: {{ mesSeleccionado }}</h3>
-          <div *ngIf="datos.productos?.productos?.length > 0; else sinProductos">
-            <div *ngFor="let producto of datos.productos.productos">
-              - Producto: {{ producto.producto }}, Ventas: {{ producto.cantidad_vendida }}, Total: ${{ producto.monto_total }}
+        <ng-container *ngIf="mesSeleccionado">
+          <ng-container *ngIf="obtenerDatosDelMes(mesSeleccionado) as datos">
+            <h3>Productos del Mes: {{ mesSeleccionado }}</h3>
+            <div
+              *ngIf="datos.productos?.productos?.length > 0; else sinProductos"
+            >
+              <div *ngFor="let producto of datos.productos.productos">
+                - Producto: {{ producto.producto }}, Ventas:
+                {{ producto.cantidad_vendida }}, Total: ${{
+                  producto.monto_total
+                }}
+              </div>
             </div>
-          </div>
-          <ng-template #sinProductos>
-            <p>No hay productos registrados este mes.</p>
-          </ng-template>
+            <ng-template #sinProductos>
+              <p>No hay productos registrados este mes.</p>
+            </ng-template>
 
-          <h3>Clientes del Mes: {{ mesSeleccionado }}</h3>
-          <div *ngIf="datos.clientes?.clientes?.length > 0; else sinClientes">
-            <div *ngFor="let cliente of datos.clientes.clientes">
-              - Cliente: {{ cliente.cliente }}, Compras: {{ cliente.numero_compras }}, Productos Comprados: {{ cliente.productos_comprados }}, Total: ${{ cliente.monto_total }}
+            <h3>Clientes del Mes: {{ mesSeleccionado }}</h3>
+            <div *ngIf="datos.clientes?.clientes?.length > 0; else sinClientes">
+              <div *ngFor="let cliente of datos.clientes.clientes">
+                - Cliente: {{ cliente.cliente }}, Compras:
+                {{ cliente.numero_compras }}, Productos Comprados:
+                {{ cliente.productos_comprados }}, Total: ${{
+                  cliente.monto_total
+                }}
+              </div>
             </div>
-          </div>
-          <ng-template #sinClientes>
-            <p>No hay clientes registrados este mes.</p>
-          </ng-template>
+            <ng-template #sinClientes>
+              <p>No hay clientes registrados este mes.</p>
+            </ng-template>
 
-          <h3>Empleados del Mes: {{ mesSeleccionado }}</h3>
-          <div *ngIf="datos.empleados?.empleados?.length > 0; else sinEmpleados">
-            <div *ngFor="let empleado of datos.empleados.empleados">
-              - Empleado: {{ empleado.empleado }}, Ventas: {{ empleado.numero_ventas }}, Productos Vendidos: {{ empleado.productos_vendidos }}, Total: ${{ empleado.monto_total }}
+            <h3>Empleados del Mes: {{ mesSeleccionado }}</h3>
+            <div
+              *ngIf="datos.empleados?.empleados?.length > 0; else sinEmpleados"
+            >
+              <div *ngFor="let empleado of datos.empleados.empleados">
+                - Empleado: {{ empleado.empleado }}, Ventas:
+                {{ empleado.numero_ventas }}, Productos Vendidos:
+                {{ empleado.productos_vendidos }}, Total: ${{
+                  empleado.monto_total
+                }}
+              </div>
             </div>
-          </div>
-          <ng-template #sinEmpleados>
-            <p>No hay empleados registrados este mes.</p>
-          </ng-template>
+            <ng-template #sinEmpleados>
+              <p>No hay empleados registrados este mes.</p>
+            </ng-template>
 
-          <h3>Resumen General del Mes: {{ mesSeleccionado }}</h3>
-          <div *ngIf="datos.general">
-            Total Ventas: {{ datos.general.total_ventas }}<br>
-            Monto Total: ${{ datos.general.monto_total }}
-          </div>
-
+            <h3>Resumen General del Mes: {{ mesSeleccionado }}</h3>
+            <div *ngIf="datos.general">
+              Total Ventas: {{ datos.general.total_ventas }}<br />
+              Monto Total: ${{ datos.general.monto_total }}
+            </div>
+          </ng-container>
         </ng-container>
-      </ng-container>
-
+      </div>
     </div>
   </div>
-</div>
-
-
-
-
 </div>

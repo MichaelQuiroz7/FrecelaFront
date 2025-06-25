@@ -77,61 +77,79 @@
   </div>
 
   <!-- Panel lateral de detalles -->
-  <div
-    class="panel-detalles"
-    [ngStyle]="{
-      width: productoSeleccionado ? '40%' : '0%',
-      opacity: productoSeleccionado ? '1' : '0',
-      pointerEvents: productoSeleccionado ? 'auto' : 'none'
-    }"
-  >
-    <div *ngIf="productoSeleccionado" class="contenido-panel">
-      <!-- Contenedor 1: Título -->
-      <div class="contenedor-titulo">
-        <h2>{{ productoSeleccionado.nombre }}</h2>
+<div
+  class="panel-detalles"
+  [ngStyle]="{
+    width: productoSeleccionado ? '40%' : '0%',
+    opacity: productoSeleccionado ? '1' : '0',
+    pointerEvents: productoSeleccionado ? 'auto' : 'none'
+  }"
+>
+  <div *ngIf="productoSeleccionado" class="contenido-panel">
+    <!-- Contenedor 1: Título -->
+    <div class="contenedor-titulo">
+      <h2>{{ productoSeleccionado.nombre }}</h2>
+    </div>
+
+    <!-- Contenedor 2: Imagen con navegación -->
+    <!-- Contenedor 2: Imagen con navegación -->
+<div class="image-navigation">
+  <button class="nav-arrow left" (click)="prevImage()" [disabled]="currentImageIndex === 0">◄</button>
+  <div class="imagen-contenedor">
+    <img
+      [src]="obtenerImagenActual()"
+      alt="{{ productoSeleccionado.nombre }}"
+      class="producto-imgSelec"
+    />
+  </div>
+  <button class="nav-arrow right" (click)="nextImage()" [disabled]="currentImageIndex === maxImageIndex">►</button>
+</div>
+
+    <!-- Contenedor 3: Descripción -->
+    <div class="contenedor-descripcion">
+      <p class="productDescription">{{ productoSeleccionado.descripcion }}</p>
+    </div>
+
+    <!-- Precio unitario -->
+    <div class="precio-unitario">
+      <p class="productPrecio">
+        Precio: {{ productoSeleccionado.precio | currency }}
+      </p>
+    </div>
+
+    <!-- Selección de cantidad -->
+    <div class="seleccion-cantidad">
+      <label for="cantidad">Cantidad:</label>
+      <input type="number" id="cantidad" [(ngModel)]="cantidad" min="1" />
+    </div>
+
+    <!-- Precio total calculado -->
+    <div class="precio-total">
+      <p>Total: {{ productoSeleccionado.precio * cantidad | currency }}</p>
+    </div>
+
+    <div class="tipoentrega">
+      <label for="tipoEntrega">Tipo de entrega:</label>
+      <select id="tipoEntrega" [(ngModel)]="tipoEntrega">
+        <option value="ENTREGA A DOMICILIO">Entrega a Domicilio</option>
+        <option value="RETIRAR EN LOCAL">Retiro en tienda</option>
+      </select>
+    </div>
+
+    <!-- Contenedor 5: Botones -->
+    <div class="contenedor-botones">
+      <div class="boton-asesor">
+        <button (click)="elegirAsesor()">Elegir asesor</button>
       </div>
-
-      <!-- Contenedor 2: Imagen -->
-      <img
-        [src]="obtenerImagenDeProducto(productoSeleccionado.idProducto)"
-        alt="{{ productoSeleccionado.nombre }}"
-        class="producto-imgSelec"
-      />
-
-      <!-- Contenedor 3: Descripción -->
-      <div class="contenedor-descripcion">
-        <p class="productDescription">{{ productoSeleccionado.descripcion }}</p>
-      </div>
-
-      <!-- Precio unitario -->
-      <div class="precio-unitario">
-        <p class="productPrecio">
-          Precio: {{ productoSeleccionado.precio | currency }}
-        </p>
-      </div>
-
-      <!-- Selección de cantidad -->
-      <div class="seleccion-cantidad">
-        <label for="cantidad">Cantidad:</label>
-        <input type="number" id="cantidad" [(ngModel)]="cantidad" min="1" />
-      </div>
-
-      <!-- Precio total calculado -->
-      <div class="precio-total">
-        <p>Total: {{ productoSeleccionado.precio * cantidad | currency }}</p>
-      </div>
-
-      <!-- Contenedor 5: Botones -->
-      <div class="contenedor-botones">
-        <div class="boton-asesor">
-          <button (click)="elegirAsesor()">Elegir asesor</button>
-        </div>
-        <div class="boton-cerrar">
-          <button (click)="cerrarPanel()">Cerrar</button>
-        </div>
+      <div class="boton-cerrar">
+        <button (click)="cerrarPanel()">Cerrar</button>
       </div>
     </div>
   </div>
+</div>
+
+
+
 </div>
 
 <!-- Modal para seleccionar asesor (Popup) -->
@@ -205,9 +223,12 @@
         <p><strong>Precio Unitario:</strong> ${{ saleDetails.precioUnitario || "N/A" }}</p>
         <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
         <p><strong>Precio Total (sin descuento):</strong> ${{ saleDetails.precioTotal || "N/A" }}</p>
-        <p><strong>Descuento (5% fijo):</strong> {{ saleDetails.precioTotal != null ? (saleDetails.precioTotal * 0.05 | number:'1.2-2') : "N/A" }}</p>
+        <p><strong>Descuento (5%):</strong> {{ saleDetails.precioTotal != null ? (saleDetails.precioTotal * 0.05 | number:'1.2-2') : "N/A" }}</p>
         <p><strong>Subtotal (con descuento):</strong> ${{ calcularPrecioTotalConDescuento() | number : "1.2-2" }}</p>
-        <p><strong>IVA (14%):</strong> ${{ calcularIVA() | number : "1.2-2" }}</p>
+        <p><strong>IVA (15%):</strong> ${{ calcularIVA() | number : "1.2-2" }}</p>
+        <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
+  <p><strong>Envio:</strong> $ 5.00</p>
+</div>
         <p><strong>Total (con IVA):</strong> ${{ calcularTotalConIVA() | number : "1.2-2" }}</p>
         <p><strong>Cliente:</strong> {{ saleDetails.nombresCliente }} {{ saleDetails.apellidosCliente }}</p>
         <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>

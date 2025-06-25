@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { DetalleVentaRequest, LatexRequest, Venta } from '../Model/venta';
+import { DetalleVentaRequest, Entrega, LatexRequest, Venta } from '../Model/venta';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,8 @@ export class VentaService {
   private myApiUrl2 = 'api/Venta/detallePedido';
   private myApiUrl3 = 'api/Venta/convert-to-pdf';
   private myApiUrl4 = 'api/Venta/registrarPago';
-  private myApiUrl5 = 'api/Venta/estadisticasMes'
+  private myApiUrl5 = 'api/Venta/estadisticasMes';
+  private myApiUrl6 = 'api/Venta/registrarEntrega';
 
   constructor(private http: HttpClient) {}
 
@@ -37,6 +38,10 @@ export class VentaService {
   
   getEstadisticasVentasPorMes(): Observable<any> {
     return this.http.get(`${this.myAppUrl}${this.myApiUrl5}`);
+  }
+
+  registarTipoEntrega(entrega: Entrega): Observable<any> {
+    return this.http.post(`${this.myAppUrl}${this.myApiUrl6}`, entrega);
   }
 
 }
