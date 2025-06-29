@@ -27,6 +27,23 @@ export interface DetalleVentaResponse {
 
 }
 
+export interface DetalleVentaConsulta
+{
+    Code : string; 
+    Message : string;
+    NombreProducto : string;
+    DescripcionProducto : string | null;
+    PrecioUnitario : number | null;
+    Cantidad : number | null;
+    PrecioTotal : number | null;
+    NombresCliente : string;
+    ApellidosCliente : string;
+    CedulaCliente : string;
+    DireccionCliente : string;
+    TipoEntrega : string;
+    EstadoEntrega : string;
+}
+
 export interface LatexRequest {
   Cliente: string;
   Cedula: string;

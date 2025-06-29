@@ -48,6 +48,14 @@
     <div class="action-card" *ngIf="userRole === '1'" (click)="abrirModal()">
       <span>Ver Estadísticas</span>
     </div>
+
+    <div class="actions">
+    <div class="action-card" (click)="abrirModalVentas()">
+      <span>Ver Ventas</span>
+    </div>
+  </div>
+
+
   </div>
 
   <div class="product-grid">
@@ -758,6 +766,120 @@
             </div>
           </ng-container>
         </ng-container>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+</div>
+
+
+<!-- Modal for navigating sales -->
+  <div class="modal sale-navigation" *ngIf="showSaleNavigationModal" (click)="cerrarModalVentas()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Detalles de Ventas</h2>
+        <button class="modal-close" (click)="cerrarModalVentas()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="search-bar">
+          <input
+            type="text"
+            [(ngModel)]="saleSearchTerm"
+            (input)="buscarVentasPorCodigo()"
+            (keyup.enter)="buscarVentasPorCodigo()"
+            placeholder="Buscar por código de venta..."
+          />
+        </div>
+        <div *ngIf="filteredVentas.length === 0" class="no-data">
+          No se encontraron ventas para el código ingresado.
+        </div>
+        <div *ngIf="filteredVentas.length > 0 && filteredVentas[currentSaleIndex]">
+          <div class="navigation-controls">
+            <button
+              [disabled]="currentSaleIndex === 0"
+              (click)="previousSale()"
+              class="nav-btn"
+            >
+              ← Anterior
+            </button>
+            <span>Venta {{ currentSaleIndex + 1 }} de {{ filteredVentas.length }}</span>
+            <button
+              [disabled]="currentSaleIndex === filteredVentas.length - 1"
+              (click)="nextSale()"
+              class="nav-btn"
+            >
+              Siguiente →
+            </button>
+          </div>
+          <p><strong>Código:</strong> {{ filteredVentas[currentSaleIndex].code }}</p>
+          <p><strong>Producto:</strong> {{ filteredVentas[currentSaleIndex].nombreProducto }}</p>
+          <p><strong>Cliente:</strong> {{ filteredVentas[currentSaleIndex].nombresCliente }} {{ filteredVentas[currentSaleIndex].apellidosCliente }}</p>
+          <p><strong>Cédula:</strong> {{ filteredVentas[currentSaleIndex].cedulaCliente }}</p>
+          <p><strong>Cantidad:</strong> {{ filteredVentas[currentSaleIndex].cantidad }}</p>
+          <p><strong>Precio Total:</strong> ${{ filteredVentas[currentSaleIndex].precioTotal | number : '1.2-2' }}</p>
+          <p><strong>Tipo de Entrega:</strong> {{ filteredVentas[currentSaleIndex].tipoEntrega }}</p>
+          <div class="form-group">
+            <label><strong>Estado:</strong> {{ filteredVentas[currentSaleIndex].estadoEntrega }}</label>
+            <select
+              class="form-control"
+              [(ngModel)]="saleStatus[filteredVentas[currentSaleIndex].code]"
+            >
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="PAGADO">Pagado</option>
+              <option value="RECHAZADO">Rechazado</option>
+              <option value="COMPLETADA">Completada</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button class="save-btn" (click)="guardarEstadoVenta(filteredVentas[currentSaleIndex].code)">Guardar</button>
+            <button class="cancel-btn" (click)="cerrarModalVentas()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para productos con stock bajo -->
+<div class="modal low-stock-navigation" *ngIf="showLowStockModal && productosBajoStock?.length > 0" (click)="cerrarModalBajoStock()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Productos con Stock Bajo</h2>
+      <button class="modal-close" (click)="cerrarModalBajoStock()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="productosBajoStock.length === 0" class="no-data">
+        No se encontraron productos con stock bajo.
+      </div>
+      <div *ngIf="productosBajoStock.length > 0 && productosBajoStock[currentLowStockIndex]">
+        <div class="navigation-controls">
+          <button
+            [disabled]="currentLowStockIndex === 0"
+            (click)="previousLowStock()"
+            class="nav-btn"
+          >
+            ← Anterior
+          </button>
+          <span>Producto {{ currentLowStockIndex + 1 }} de {{ productosBajoStock.length }}</span>
+          <button
+            [disabled]="currentLowStockIndex === productosBajoStock.length - 1"
+            (click)="nextLowStock()"
+            class="nav-btn"
+          >
+            Siguiente →
+          </button>
+        </div>
+        <p><strong>Nombre:</strong> {{ productosBajoStock[currentLowStockIndex].nombre }}</p>
+        <p><strong>Stock:</strong> {{ productosBajoStock[currentLowStockIndex].stock }}</p>
+        <p><strong>Descripción:</strong> {{ productosBajoStock[currentLowStockIndex].descripcion || 'N/A' }}</p>
+        <p><strong>Precio:</strong> ${{ productosBajoStock[currentLowStockIndex].precio | number: '1.2-2' }}</p>
+        <p class="warning-message">¡Este producto está por acabarse!</p>
+        <div class="modal-actions">
+          <button class="confirm-btn" (click)="aceptarProductoBajoStock()">Aceptar</button>
+        </div>
       </div>
     </div>
   </div>

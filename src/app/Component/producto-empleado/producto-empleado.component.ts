@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef} from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { ProductosService } from '../../Service/productos.service';
 import { CommonModule } from '@angular/common';
 import {
@@ -28,7 +28,7 @@ import {
 } from '../../Model/venta';
 import { VentaService } from '../../Service/venta.service';
 import { Chart } from 'chart.js/auto';
-import { FilterByMonthPipe } from "../Pipes/FilterByMonthPipe";
+import { FilterByMonthPipe } from '../Pipes/FilterByMonthPipe';
 
 @Component({
   selector: 'app-producto-empleado',
@@ -38,7 +38,6 @@ import { FilterByMonthPipe } from "../Pipes/FilterByMonthPipe";
   styleUrl: './producto-empleado.component.css',
 })
 export class ProductoEmpleadoComponent {
-
   isGeneratingPDF: boolean = false;
   showStatsModal: boolean = false;
   selectedMonth: number = new Date().getMonth() + 1;
@@ -50,6 +49,11 @@ export class ProductoEmpleadoComponent {
   showConfirmDeleteImageModal: boolean = false;
   showManageEmployeesModal: boolean = false;
   showSaleDetailsModal: boolean = false;
+  showSaleNavigationModal: boolean = false;
+  currentSaleIndex: number = 0;
+  saleStatus: { [key: string]: string } = {};
+  filteredVentas: any[] = [];
+  saleSearchTerm: string = '';
 
   productoEditado: Producto = {
     idProducto: 0,
@@ -105,18 +109,35 @@ export class ProductoEmpleadoComponent {
   subtotalIVA: number;
   porcentajeDescuento: number;
   estadisticas: any = null;
+  VentasPagadasRechazadas: any = null;
+
+  
 
   months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
   @ViewChild('productsChart', { static: false }) productsChartRef!: ElementRef;
   @ViewChild('clientsChart', { static: false }) clientsChartRef!: ElementRef;
-  @ViewChild('employeesChart', { static: false }) employeesChartRef!: ElementRef;
+  @ViewChild('employeesChart', { static: false })
+  employeesChartRef!: ElementRef;
   private productsChart: Chart | undefined;
   private clientsChart: Chart | undefined;
   private employeesChart: Chart | undefined;
+  productosBajoStock: any;
+  showLowStockModal: boolean = false;
+  currentLowStockIndex: number = 0;
 
   constructor(
     private productosService: ProductosService,
@@ -154,6 +175,8 @@ export class ProductoEmpleadoComponent {
     this.obtenerEmpleados();
     this.obtenerDescuentos();
     this.cargarTodasLasEstadisticas();
+    this.obtenerVentasRechazos();
+    this.obtenerProductosBajoStock();
   }
 
   obtenerDescuentos() {
@@ -177,8 +200,6 @@ export class ProductoEmpleadoComponent {
       },
     });
   }
-
- 
 
   onDescuentoChange(event: any): void {
     this.selectedDescuento = event ? Number(event) : null;
@@ -369,44 +390,44 @@ export class ProductoEmpleadoComponent {
     }
   }
 
- subirImagenes(isAddModal: boolean): void {
-  if (this.selectedImages.length === 0) {
-    alert('No hay imágenes seleccionadas para subir.');
-    return;
+  subirImagenes(isAddModal: boolean): void {
+    if (this.selectedImages.length === 0) {
+      alert('No hay imágenes seleccionadas para subir.');
+      return;
+    }
+
+    const idProducto = isAddModal
+      ? this.nuevoProducto.idProducto
+      : this.productoEditado.idProducto;
+
+    if (!idProducto && isAddModal) {
+      alert('Por favor, guarda el producto primero antes de subir imágenes.');
+      return;
+    }
+
+    const formData = new FormData();
+    this.selectedImages.forEach((image) => {
+      formData.append('Imagenes', image);
+    });
+    formData.append('IdProducto', idProducto.toString());
+
+    this.productosService.uploadImages(formData).subscribe({
+      next: (imageResponse: any) => {
+        const newImages = imageResponse.data.map((img: any) => ({
+          idImagen: img.idImagen,
+          idProducto: idProducto,
+          imagenUrl: img.imagenUrl,
+        }));
+        this.imagenes.push(...newImages);
+        this.selectedImages = [];
+        alert('Imágenes subidas exitosamente.');
+      },
+      error: (error) => {
+        console.error('Error al subir las imágenes:', error);
+        alert('Error al subir las imágenes. Por favor, intenta de nuevo.');
+      },
+    });
   }
-
-  const idProducto = isAddModal
-    ? this.nuevoProducto.idProducto
-    : this.productoEditado.idProducto;
-
-  if (!idProducto && isAddModal) {
-    alert('Por favor, guarda el producto primero antes de subir imágenes.');
-    return;
-  }
-
-  const formData = new FormData();
-  this.selectedImages.forEach((image) => {
-    formData.append('Imagenes', image); 
-  });
-  formData.append('IdProducto', idProducto.toString()); 
-
-  this.productosService.uploadImages(formData).subscribe({
-    next: (imageResponse: any) => {
-      const newImages = imageResponse.data.map((img: any) => ({
-        idImagen: img.idImagen,
-        idProducto: idProducto,
-        imagenUrl: img.imagenUrl,
-      }));
-      this.imagenes.push(...newImages);
-      this.selectedImages = [];
-      alert('Imágenes subidas exitosamente.');
-    },
-    error: (error) => {
-      console.error('Error al subir las imágenes:', error);
-      alert('Error al subir las imágenes. Por favor, intenta de nuevo.');
-    },
-  });
-}
 
   guardarEdicion(): void {
     this.productosService.actualizarProducto(this.productoEditado).subscribe({
@@ -767,104 +788,100 @@ export class ProductoEmpleadoComponent {
   }
 
   calcularIVA(): number {
-  const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
-  this.subtotalIVA = subtotalConDescuento;
-  return subtotalConDescuento * 0.14; // 14% IVA
-}
+    const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
+    this.subtotalIVA = subtotalConDescuento;
+    return subtotalConDescuento * 0.14; // 14% IVA
+  }
 
   calcularSubtotalSinIVA(precioTotalConIVA: number): number {
-  const ivaRate = 0.14; 
-  return precioTotalConIVA / (1 + ivaRate);
-}
-
-calcularTotalConIVA(): number {
-  const subtotal = this.calcularPrecioTotalConDescuento();
-  const iva = this.calcularIVA();
-  if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
-    return subtotal + iva + 5; // Añadir $5 de costo de envío
-  }else{
-    return subtotal + iva;
-  }
-  
-}
-
-calcularIVAInicial(precioTotalConIVA: number): number {
-  const subtotalSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
-  return precioTotalConIVA - subtotalSinIVA;
-}
-
-calcularPrecioTotalConDescuento(): number {
-  if (!this.saleDetails || !this.saleDetails.precioTotal) {
-    return 0;
+    const ivaRate = 0.14;
+    return precioTotalConIVA / (1 + ivaRate);
   }
 
-  const subtotalSinIVA = this.calcularSubtotalSinIVA(this.saleDetails.precioTotal);
-
-  if (this.selectedDescuento === null || this.selectedDescuento === 0) {
-    return subtotalSinIVA;
+  calcularTotalConIVA(): number {
+    const subtotal = this.calcularPrecioTotalConDescuento();
+    const iva = this.calcularIVA();
+    if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
+      return subtotal + iva + 5; // Añadir $5 de costo de envío
+    } else {
+      return subtotal + iva;
+    }
   }
 
-  const descuento = this.selectedDescuento / 100;
-  this.porcentajeDescuento = descuento;
-  return subtotalSinIVA * (1 - descuento);
-}
-
-
-
-
-
-generarOrdenPago(): void {
-  if (!this.saleDetails) {
-    alert('No hay detalles de venta disponibles.');
-    return;
+  calcularIVAInicial(precioTotalConIVA: number): number {
+    const subtotalSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
+    return precioTotalConIVA - subtotalSinIVA;
   }
 
-  // Activar el estado de carga
+  calcularPrecioTotalConDescuento(): number {
+    if (!this.saleDetails || !this.saleDetails.precioTotal) {
+      return 0;
+    }
+
+    const subtotalSinIVA = this.calcularSubtotalSinIVA(
+      this.saleDetails.precioTotal
+    );
+
+    if (this.selectedDescuento === null || this.selectedDescuento === 0) {
+      return subtotalSinIVA;
+    }
+
+    const descuento = this.selectedDescuento / 100;
+    this.porcentajeDescuento = descuento;
+    return subtotalSinIVA * (1 - descuento);
+  }
+
+  generarOrdenPago(): void {
+    if (!this.saleDetails) {
+      alert('No hay detalles de venta disponibles.');
+      return;
+    }
+
+    // Activar el estado de carga
     this.isGeneratingPDF = true;
 
-  const precioTotalConIVA = this.saleDetails.precioTotal || 0;
-  const subtotalSinDescuentoSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
-  const ivaInicial = this.calcularIVAInicial(precioTotalConIVA);
+    const precioTotalConIVA = this.saleDetails.precioTotal || 0;
+    const subtotalSinDescuentoSinIVA =
+      this.calcularSubtotalSinIVA(precioTotalConIVA);
+    const ivaInicial = this.calcularIVAInicial(precioTotalConIVA);
 
-  const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
-  const ivaRecalculado = this.calcularIVA();
-  const totalFinal = this.calcularTotalConIVA();
+    const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
+    const ivaRecalculado = this.calcularIVA();
+    const totalFinal = this.calcularTotalConIVA();
 
-  const descuentoMonto = subtotalSinDescuentoSinIVA - subtotalConDescuento;
+    const descuentoMonto = subtotalSinDescuentoSinIVA - subtotalConDescuento;
 
-  const fecha = new Date().toLocaleDateString('es-EC', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+    const fecha = new Date().toLocaleDateString('es-EC', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
-  const request: LatexRequest = {
-    Cliente: `${this.saleDetails.nombresCliente} ${this.saleDetails.apellidosCliente}`,
-    Cedula: this.saleDetails.cedulaCliente,
-    Fecha: fecha,
-    Productos: [
-      {
-        Codigo: this.saleDetails.code || 'N/A',
-        Descripcion: this.saleDetails.nombreProducto || 'N/A',
-        Cantidad: this.saleDetails.cantidad || 0,
-        PrecioUnitario: this.saleDetails.precioUnitario || 0,
-        Total: this.saleDetails.precioTotal || 0,
-      },
-    ],
-    SubtotalSinDescuento: subtotalSinDescuentoSinIVA,
-    Descuento: descuentoMonto,
-    SubtotalConDescuento: subtotalConDescuento,
-    Iva: ivaRecalculado,
-    Total: totalFinal,
-  };
+    const request: LatexRequest = {
+      Cliente: `${this.saleDetails.nombresCliente} ${this.saleDetails.apellidosCliente}`,
+      Cedula: this.saleDetails.cedulaCliente,
+      Fecha: fecha,
+      Productos: [
+        {
+          Codigo: this.saleDetails.code || 'N/A',
+          Descripcion: this.saleDetails.nombreProducto || 'N/A',
+          Cantidad: this.saleDetails.cantidad || 0,
+          PrecioUnitario: this.saleDetails.precioUnitario || 0,
+          Total: this.saleDetails.precioTotal || 0,
+        },
+      ],
+      SubtotalSinDescuento: subtotalSinDescuentoSinIVA,
+      Descuento: descuentoMonto,
+      SubtotalConDescuento: subtotalConDescuento,
+      Iva: ivaRecalculado,
+      Total: totalFinal,
+    };
 
-  this.downloadLaTeXAsPDF(
-    JSON.stringify(request),
-    `orden_de_venta_${this.saleDetails.cedulaCliente}_${Date.now()}.pdf`
-  );
-}
-  
-
+    this.downloadLaTeXAsPDF(
+      JSON.stringify(request),
+      `orden_de_venta_${this.saleDetails.cedulaCliente}_${Date.now()}.pdf`
+    );
+  }
 
   downloadLaTeXAsPDF(requestData: string, filename: string): void {
     if (!this.saleDetails || !this.saleDetails.cedulaCliente) {
@@ -902,8 +919,7 @@ generarOrdenPago(): void {
     });
   }
 
-
-   // Nuevo método para obtener estadísticas
+  // Nuevo método para obtener estadísticas
   obtenerEstadisticas(): void {
     this.ventaService.getEstadisticasVentasPorMes().subscribe({
       next: (response: any) => {
@@ -913,7 +929,9 @@ generarOrdenPago(): void {
       },
       error: (error) => {
         console.error('Error al obtener las estadísticas:', error);
-        alert('Error al obtener las estadísticas. Por favor, intenta de nuevo.');
+        alert(
+          'Error al obtener las estadísticas. Por favor, intenta de nuevo.'
+        );
       },
     });
   }
@@ -923,100 +941,139 @@ generarOrdenPago(): void {
     this.estadisticas = null;
   }
 
-
   onMonthChange(event: any): void {
-  this.selectedMonth = Number(event);
-  this.updateCharts();
-}
-
+    this.selectedMonth = Number(event);
+    this.updateCharts();
+  }
 
   private updateCharts(): void {
-  this.destroyCharts();
+    this.destroyCharts();
 
-  if (!this.estadisticas || !this.productsChartRef || !this.clientsChartRef || !this.employeesChartRef) {
-    console.warn('Datos o referencias de gráficos no disponibles');
-    return;
+    if (
+      !this.estadisticas ||
+      !this.productsChartRef ||
+      !this.clientsChartRef ||
+      !this.employeesChartRef
+    ) {
+      console.warn('Datos o referencias de gráficos no disponibles');
+      return;
+    }
+
+    const productsData = this.getChartData(
+      'productos_por_mes',
+      'cantidad_vendida',
+      'producto'
+    );
+    if (productsData.labels.length > 0) {
+      this.productsChart = new Chart(this.productsChartRef.nativeElement, {
+        type: 'bar',
+        data: productsData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: `Productos Vendidos - ${
+                this.months[this.selectedMonth - 1]
+              }`,
+            },
+          },
+        },
+      });
+    }
+
+    const clientsData = this.getChartData(
+      'clientes_por_mes',
+      'numero_compras',
+      'cliente'
+    );
+    if (clientsData.labels.length > 0) {
+      this.clientsChart = new Chart(this.clientsChartRef.nativeElement, {
+        type: 'bar',
+        data: clientsData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: `Compras por Cliente - ${
+                this.months[this.selectedMonth - 1]
+              }`,
+            },
+          },
+        },
+      });
+    }
+
+    const employeesData = this.getChartData(
+      'empleados_por_mes',
+      'numero_ventas',
+      'empleado'
+    );
+    if (employeesData.labels.length > 0) {
+      this.employeesChart = new Chart(this.employeesChartRef.nativeElement, {
+        type: 'bar',
+        data: employeesData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: `Ventas por Empleado - ${
+                this.months[this.selectedMonth - 1]
+              }`,
+            },
+          },
+        },
+      });
+    }
   }
 
-  const productsData = this.getChartData('productos_por_mes', 'cantidad_vendida', 'producto');
-  if (productsData.labels.length > 0) {
-    this.productsChart = new Chart(this.productsChartRef.nativeElement, {
-      type: 'bar',
-      data: productsData,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'top' },
-          title: { display: true, text: `Productos Vendidos - ${this.months[this.selectedMonth - 1]}` }
-        }
-      }
-    });
+  private getChartData(
+    section: string,
+    valueKey: string,
+    labelKey: string
+  ): any {
+    if (!this.estadisticas || !this.estadisticas[section]) {
+      console.warn(`No hay datos disponibles para ${section}`);
+      return { labels: [], datasets: [] };
+    }
+
+    const filteredData = this.estadisticas[section].filter(
+      (item: any) => item.mes === this.selectedMonth
+    );
+    console.log(`Datos filtrados para ${section}:`, filteredData); // Depuración
+
+    if (filteredData.length === 0) {
+      console.warn(
+        `No se encontraron datos para el mes ${this.selectedMonth} en ${section}`
+      );
+      return { labels: [], datasets: [] };
+    }
+
+    const labels = filteredData.flatMap((item: any) =>
+      item[labelKey].map((x: any) => x[labelKey])
+    );
+    const data = filteredData.flatMap((item: any) =>
+      item[labelKey].map((x: any) => x[valueKey])
+    );
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: `Cantidad ${valueKey.replace('_', ' ')}`,
+          data: data,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
   }
-
-  const clientsData = this.getChartData('clientes_por_mes', 'numero_compras', 'cliente');
-  if (clientsData.labels.length > 0) {
-    this.clientsChart = new Chart(this.clientsChartRef.nativeElement, {
-      type: 'bar',
-      data: clientsData,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'top' },
-          title: { display: true, text: `Compras por Cliente - ${this.months[this.selectedMonth - 1]}` }
-        }
-      }
-    });
-  }
-
-  const employeesData = this.getChartData('empleados_por_mes', 'numero_ventas', 'empleado');
-  if (employeesData.labels.length > 0) {
-    this.employeesChart = new Chart(this.employeesChartRef.nativeElement, {
-      type: 'bar',
-      data: employeesData,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'top' },
-          title: { display: true, text: `Ventas por Empleado - ${this.months[this.selectedMonth - 1]}` }
-        }
-      }
-    });
-  }
-}
-  
-
-private getChartData(section: string, valueKey: string, labelKey: string): any {
-  if (!this.estadisticas || !this.estadisticas[section]) {
-    console.warn(`No hay datos disponibles para ${section}`);
-    return { labels: [], datasets: [] };
-  }
-
-  const filteredData = this.estadisticas[section].filter((item: any) => item.mes === this.selectedMonth);
-  console.log(`Datos filtrados para ${section}:`, filteredData); // Depuración
-
-  if (filteredData.length === 0) {
-    console.warn(`No se encontraron datos para el mes ${this.selectedMonth} en ${section}`);
-    return { labels: [], datasets: [] };
-  }
-
-  const labels = filteredData.flatMap((item: any) => item[labelKey].map((x: any) => x[labelKey]));
-  const data = filteredData.flatMap((item: any) => item[labelKey].map((x: any) => x[valueKey]));
-
-  return {
-    labels: labels,
-    datasets: [{
-      label: `Cantidad ${valueKey.replace('_', ' ')}`,
-      data: data,
-      backgroundColor: 'rgba(54, 162, 235, 0.6)',
-      borderColor: 'rgba(54, 162, 235, 1)',
-      borderWidth: 1
-    }]
-  };
-}
-  
-
-
-
 
   private destroyCharts(): void {
     if (this.productsChart) this.productsChart.destroy();
@@ -1024,23 +1081,31 @@ private getChartData(section: string, valueKey: string, labelKey: string): any {
     if (this.employeesChart) this.employeesChart.destroy();
   }
 
- 
   mesesDisponibles: string[] = [];
   mesSeleccionado: string = '';
-   monthsInSpanish = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  monthsInSpanish = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
-
-  
-
   cargarTodasLasEstadisticas() {
-    this.ventaService.getEstadisticasVentasPorMes().subscribe(response => {
+    this.ventaService.getEstadisticasVentasPorMes().subscribe((response) => {
       this.estadisticas = response.data;
       console.log('Estadísticas obtenidas:', this.estadisticas);
 
-      this.mesesDisponibles = this.estadisticas.estadisticas_generales.map((e: any) => e.nombre_mes);
+      this.mesesDisponibles = this.estadisticas.estadisticas_generales.map(
+        (e: any) => e.nombre_mes
+      );
       this.mesesDisponibles = [...new Set(this.mesesDisponibles)];
 
       if (this.mesesDisponibles.length > 0) {
@@ -1049,26 +1114,162 @@ private getChartData(section: string, valueKey: string, labelKey: string): any {
     });
   }
 
-
-   obtenerDatosDelMes(mes: string) {
-    const productos = this.estadisticas.productos_por_mes.find((p: any) => p.nombre_mes === mes);
-    const clientes = this.estadisticas.clientes_por_mes.find((c: any) => c.nombre_mes === mes);
-    const empleados = this.estadisticas.empleados_por_mes.find((e: any) => e.nombre_mes === mes);
-    const general = this.estadisticas.estadisticas_generales.find((g: any) => g.nombre_mes === mes);
+  obtenerDatosDelMes(mes: string) {
+    const productos = this.estadisticas.productos_por_mes.find(
+      (p: any) => p.nombre_mes === mes
+    );
+    const clientes = this.estadisticas.clientes_por_mes.find(
+      (c: any) => c.nombre_mes === mes
+    );
+    const empleados = this.estadisticas.empleados_por_mes.find(
+      (e: any) => e.nombre_mes === mes
+    );
+    const general = this.estadisticas.estadisticas_generales.find(
+      (g: any) => g.nombre_mes === mes
+    );
     return { productos, clientes, empleados, general };
   }
 
   mostrarModal: boolean = false;
 
-abrirModal() {
-  this.mostrarModal = true;
-}
+  abrirModal() {
+    this.mostrarModal = true;
+  }
 
-cerrarModal() {
-  this.mostrarModal = false;
-}
+  cerrarModal() {
+    this.mostrarModal = false;
+  }
 
 
+
+  obtenerVentasRechazos(): void {
+    this.ventaService.getVentasPagadasORechazadasConDetalles().subscribe({
+      next: (response: any) => {
+        this.VentasPagadasRechazadas = response.data;
+        this.filteredVentas = [...this.VentasPagadasRechazadas];
+        console.log('Ventas Pagadas / Rechazadas:', this.VentasPagadasRechazadas);
+        this.VentasPagadasRechazadas.forEach((venta: any) => {
+          this.saleStatus[venta.code] = venta.estadoEntrega || 'PENDIENTE';
+        });
+      },
+      error: (error) => {
+        console.error('Error al obtener las estadísticas:', error);
+        alert('Error al obtener las estadísticas. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+  // Open the sale navigation modal
+  abrirModalVentas(): void {
+    this.showSaleNavigationModal = true;
+    this.currentSaleIndex = 0;
+    this.saleSearchTerm = '';
+    this.filteredVentas = [...this.VentasPagadasRechazadas];
+  }
+
+  // Close the sale navigation modal
+  cerrarModalVentas(): void {
+    this.showSaleNavigationModal = false;
+    this.currentSaleIndex = 0;
+    this.saleSearchTerm = '';
+    this.filteredVentas = [...this.VentasPagadasRechazadas];
+  }
+
+  // Navigate to the previous sale
+  previousSale(): void {
+    if (this.currentSaleIndex > 0) {
+      this.currentSaleIndex--;
+    }
+  }
+
+  // Navigate to the next sale
+  nextSale(): void {
+    if (this.currentSaleIndex < this.filteredVentas.length - 1) {
+      this.currentSaleIndex++;
+    }
+  }
+
+   // Filter sales by product code
+  buscarVentasPorCodigo(): void {
+    if (this.saleSearchTerm.trim() === '') {
+      this.filteredVentas = [...this.VentasPagadasRechazadas];
+    } else {
+      this.filteredVentas = this.VentasPagadasRechazadas.filter((venta: any) =>
+        venta.code.toLowerCase().includes(this.saleSearchTerm.toLowerCase())
+      );
+      this.currentSaleIndex = 0; // Reset to first sale after filtering
+    }
+  }
+
+  guardarEstadoVenta(code: string): void {
+    const venta = this.VentasPagadasRechazadas.find((v: any) => v.code === code);
+    if (!venta) {
+      alert('Error: Venta no encontrada.');
+      return;
+    }
+
+    const updatedVenta = { ...venta, estadoEntrega: this.saleStatus[code] };
+    this.ventaService.actualizarEstadoVenta(updatedVenta).subscribe({
+      next: (response: any) => {
+        alert('Estado de la venta actualizado exitosamente.');
+        // Update the local arrays
+        this.VentasPagadasRechazadas = this.VentasPagadasRechazadas.map((v: any) =>
+          v.code === code ? { ...v, estadoEntrega: this.saleStatus[code] } : v
+        );
+        this.filteredVentas = this.filteredVentas.map((v: any) =>
+          v.code === code ? { ...v, estadoEntrega: this.saleStatus[code] } : v
+        );
+      },
+      error: (error) => {
+        console.error('Error al actualizar el estado de la venta:', error);
+        alert('Error al actualizar el estado de la venta. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+
+
+  obtenerProductosBajoStock(): void {
+    this.productosService.getProductosBajoStock().subscribe({
+      next: (response: any) => {
+        this.productosBajoStock = response.data;
+        console.log('Productos bajo stock:', this.productosBajoStock);
+        if (this.productosBajoStock?.length > 0) {
+          this.showLowStockModal = true;
+          this.currentLowStockIndex = 0;
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener productos bajo stock:', error);
+        alert('Error al obtener productos bajo stock. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+  previousLowStock(): void {
+    if (this.currentLowStockIndex > 0) {
+      this.currentLowStockIndex--;
+    }
+  }
+
+  nextLowStock(): void {
+    if (this.currentLowStockIndex < this.productosBajoStock.length - 1) {
+      this.currentLowStockIndex++;
+    }
+  }
+
+  aceptarProductoBajoStock(): void {
+    if (this.currentLowStockIndex < this.productosBajoStock.length - 1) {
+      this.currentLowStockIndex++;
+    } else {
+      this.cerrarModalBajoStock();
+    }
+  }
+
+  cerrarModalBajoStock(): void {
+    this.showLowStockModal = false;
+    this.currentLowStockIndex = 0;
+  }
 
 
 

@@ -1,15 +1,23 @@
 <!-- HEADER -->
-<header class="header">
-  <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
-  <div class="header-left">
-    <h1>Catálogo de Productos</h1>
-    <p class="welcome-message" *ngIf="clienteNombre">Bienvenido, {{ clienteNombre }}</p>
-  </div>
-  <div class="header-right">
-    <button class="action-button" (click)="consultarPedidos()">Consultar Pedidos</button>
-    <button class="action-button logout-button" (click)="cerrarSesion()">Cerrar Sesión</button>
-  </div>
-</header>
+<div class="contenedor">
+  <header class="header">
+    <img src="assets/logoFrecela.jpg" alt="Logo" class="logo" />
+    <div class="header-left">
+      <h1>Catálogo de Productos</h1>
+      <p class="welcome-message" *ngIf="clienteNombre">Bienvenido, {{ clienteNombre }}</p>
+    </div>
+    <nav>
+      <ul>
+        <li><a (click)="navigateToNosotros()">NOSOTROS</a></li>
+      </ul>
+    </nav>
+    <div class="header-right">
+      <button class="action-button" (click)="consultarPedidos()">Consultar Pedidos</button>
+      <button class="action-button logout-button" (click)="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+    
+  </header>
+</div>
 
 <div class="filtrosBusqueda">
   <!-- Filtro Tipo Producto -->

@@ -3,7 +3,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   background-color: #f5f5f5;
 }
 
@@ -155,7 +155,8 @@
   margin-top: 10px;
 }
 
-.edit-btn, .delete-btn {
+.edit-btn,
+.delete-btn {
   width: 100%;
   padding: 8px;
   border: none;
@@ -449,7 +450,9 @@ ng-select .ng-select-container {
 }
 
 /* Buttons */
-.save-btn, .confirm-btn, .cancel-btn {
+.save-btn,
+.confirm-btn,
+.cancel-btn {
   padding: 10px;
   border: none;
   border-radius: 4px;
@@ -458,12 +461,14 @@ ng-select .ng-select-container {
   transition: background-color 0.3s;
 }
 
-.save-btn, .confirm-btn {
+.save-btn,
+.confirm-btn {
   background-color: #3498db;
   color: white;
 }
 
-.save-btn:hover, .confirm-btn:hover {
+.save-btn:hover,
+.confirm-btn:hover {
   background-color: #2980b9;
 }
 
@@ -562,8 +567,14 @@ ng-select .ng-select-container {
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-header {
@@ -585,7 +596,7 @@ ng-select .ng-select-container {
 }
 
 .modal-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
@@ -700,6 +711,107 @@ ng-select .ng-select-container {
   border-radius: 5px;
 }
 
+
+
+/* Sale Navigation Modal */
+.sale-navigation .modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.sale-navigation .modal-body p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.sale-navigation .modal-body p strong {
+  color: #2c3e50;
+}
+
+.navigation-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.nav-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.nav-btn:hover {
+  background-color: #2980b9;
+}
+
+.nav-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.sale-navigation .search-bar {
+  margin-bottom: 15px;
+}
+
+.sale-navigation .search-bar input {
+  width: 100%;
+}
+
+
+.low-stock-navigation .modal-content {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+}
+.warning-message {
+  color: #d32f2f;
+  font-weight: bold;
+  margin: 10px 0;
+}
+.navigation-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.nav-btn {
+  padding: 8px 16px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.nav-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.confirm-btn {
+  padding: 8px 16px;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+
 @media (max-width: 768px) {
   .modal-container {
     width: 92%;
@@ -747,54 +859,52 @@ ng-select .ng-select-container {
     min-width: 100%;
   }
 
-  .select-discount{
+  .select-discount {
     background-color: #ddd;
   }
 
   /* Stats Modal */
-.stats-modal .stats-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
+  .stats-modal .stats-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
 
-.stats-modal .stats-section {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
+  .stats-modal .stats-section {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
 
-.stats-modal .stats-section h3 {
-  color: #2c3e50;
-  font-size: 18px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 5px;
-}
+  .stats-modal .stats-section h3 {
+    color: #2c3e50;
+    font-size: 18px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+  }
 
-.stats-modal .stats-card {
-  margin-bottom: 15px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 5px;
-}
+  .stats-modal .stats-card {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+  }
 
-.stats-modal p {
-  margin: 5px 0;
-  font-size: 14px;
-  color: #7f8c8d;
-}
+  .stats-modal p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #7f8c8d;
+  }
 
-.stats-modal p strong {
-  color: #2c3e50;
-}
+  .stats-modal p strong {
+    color: #2c3e50;
+  }
 
-.error-message {
-  color: #dc3545;
-  font-size: 14px;
-  text-align: center;
-}
-
-
+  .error-message {
+    color: #dc3545;
+    font-size: 14px;
+    text-align: center;
+  }
 }
