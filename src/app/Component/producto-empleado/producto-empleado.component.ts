@@ -201,6 +201,36 @@ export class ProductoEmpleadoComponent {
     });
   }
 
+
+
+
+
+  subtotalDescuento(): number {
+  if (!this.saleDetails || !this.saleDetails.precioTotal || !this.selectedDescuento) {
+    return this.saleDetails?.precioTotal || 0;
+  }
+
+  const precioTotal = Number(this.saleDetails.precioTotal);
+  const descuentoPorcentaje = Number(this.selectedDescuento);
+  
+  // Calcular el valor del descuento
+  const valorDescuento = precioTotal * (descuentoPorcentaje / 100);
+  
+  // Restar el descuento al precio total
+  const subtotal = precioTotal - valorDescuento;
+  
+  return Number(subtotal.toFixed(2)); // Redondear a 2 decimales
+}
+
+calcularIva15(): number {
+  const subtotal = this.subtotalDescuento();
+  
+  // Calcular el 15% de IVA sobre el subtotal con descuento
+  const iva = subtotal * 0.15;
+  
+  return Number(iva.toFixed(2)); // Redondear a 2 decimales
+}
+
   onDescuentoChange(event: any): void {
     this.selectedDescuento = event ? Number(event) : null;
   }
@@ -790,7 +820,7 @@ export class ProductoEmpleadoComponent {
   calcularIVA(): number {
     const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
     this.subtotalIVA = subtotalConDescuento;
-    return subtotalConDescuento * 0.14; // 14% IVA
+    return subtotalConDescuento * 0.15; 
   }
 
   calcularSubtotalSinIVA(precioTotalConIVA: number): number {
@@ -798,20 +828,27 @@ export class ProductoEmpleadoComponent {
     return precioTotalConIVA / (1 + ivaRate);
   }
 
-  calcularTotalConIVA(): number {
-    const subtotal = this.calcularPrecioTotalConDescuento();
-    const iva = this.calcularIVA();
-    if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
-      return subtotal + iva + 5; // Añadir $5 de costo de envío
-    } else {
-      return subtotal + iva;
-    }
+  calcularTotalIvaDescuentoEnvio(): number {
+  const subtotal = this.subtotalDescuento();
+  const iva = this.calcularIva15();
+  
+  // Validar si hay entrega a domicilio para añadir costo de envío
+  if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
+    return Number((subtotal + iva + 5).toFixed(2)); // Añadir $5 de costo de envío
+  } else {
+    return Number((subtotal + iva).toFixed(2));
   }
+}
 
   calcularIVAInicial(precioTotalConIVA: number): number {
     const subtotalSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
     return precioTotalConIVA - subtotalSinIVA;
   }
+
+
+
+
+
 
   calcularPrecioTotalConDescuento(): number {
     if (!this.saleDetails || !this.saleDetails.precioTotal) {
@@ -831,6 +868,10 @@ export class ProductoEmpleadoComponent {
     return subtotalSinIVA * (1 - descuento);
   }
 
+
+
+
+
   generarOrdenPago(): void {
     if (!this.saleDetails) {
       alert('No hay detalles de venta disponibles.');
@@ -845,11 +886,11 @@ export class ProductoEmpleadoComponent {
       this.calcularSubtotalSinIVA(precioTotalConIVA);
     const ivaInicial = this.calcularIVAInicial(precioTotalConIVA);
 
-    const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
-    const ivaRecalculado = this.calcularIVA();
-    const totalFinal = this.calcularTotalConIVA();
+    const subtotalConDescuento = this.subtotalDescuento();
+    const ivaRecalculado = this.calcularIva15();
+    const totalFinal = this.calcularTotalIvaDescuentoEnvio();
 
-    const descuentoMonto = subtotalSinDescuentoSinIVA - subtotalConDescuento;
+    const descuentoMonto =  this.saleDetails.precioTotal? 0 - subtotalConDescuento : 0; 
 
     const fecha = new Date().toLocaleDateString('es-EC', {
       year: 'numeric',

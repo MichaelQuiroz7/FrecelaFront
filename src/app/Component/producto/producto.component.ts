@@ -532,6 +532,8 @@ tipoEntrega: any;
         console.log('Comprobante subido exitosamente:', response);
         this.cerrarModalPagoIdVenta();
         this.cerrarModalIdVenta();
+        this.showSaleDetailsModal= false;
+        this.showPaymentModal = false;
       },
       error: (error) => {
         console.error('Error al subir el comprobante por ID:', error);
@@ -558,9 +560,16 @@ tipoEntrega: any;
 //#REGION CALCULOS
 
   calcularIVA(): number {
-    if (!this.saleDetails || !this.saleDetails.precioTotal) return 0;
-    const subtotalSinIVA = this.saleDetails.precioTotal / 1.14; // Invertir el 14% IVA
-    return subtotalSinIVA * 0.14; // Calcular IVA
+    if (!this.saleDetails || this.saleDetails.precioTotal == null) return 0;
+    const subtotalSinIVA = this.saleDetails.precioTotal - (this.saleDetails.precioTotal * 0.05);
+    const iva = subtotalSinIVA * 0.15; // IVA del 15%
+    return iva;
+  }
+
+  calcularSubtotalDescuento(): number {
+    if (!this.saleDetails || this.saleDetails.precioTotal == null) return 0;
+    const subtotalSinIVA = this.saleDetails.precioTotal - (this.saleDetails.precioTotal * 0.05);
+    return subtotalSinIVA;
   }
 
   calcularPrecioTotalConDescuento(): number {
@@ -583,8 +592,9 @@ tipoEntrega: any;
   }
 
   calcularTotalConIVA(): number {
-  const subtotalConDescuento = this.calcularPrecioTotalConDescuento();
-  let total = subtotalConDescuento * 1.15; // IVA del 15%
+  const subtotalConDescuento = this.calcularSubtotalDescuento();
+  const iva = this.calcularIVA();
+  let total = subtotalConDescuento + iva; // IVA del 15%
   // Si el tipo de entrega es "ENTREGA A DOMICILIO", agregar $5.00 al total
   if (this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO') {
     total += 5.00;

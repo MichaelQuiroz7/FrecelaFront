@@ -232,7 +232,7 @@
         <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
         <p><strong>Precio Total (sin descuento):</strong> ${{ saleDetails.precioTotal || "N/A" }}</p>
         <p><strong>Descuento (5%):</strong> {{ saleDetails.precioTotal != null ? (saleDetails.precioTotal * 0.05 | number:'1.2-2') : "N/A" }}</p>
-        <p><strong>Subtotal (con descuento):</strong> ${{ calcularPrecioTotalConDescuento() | number : "1.2-2" }}</p>
+        <p><strong>Subtotal (con descuento):</strong> ${{ calcularSubtotalDescuento() | number : "1.2-2" }}</p>
         <p><strong>IVA (15%):</strong> ${{ calcularIVA() | number : "1.2-2" }}</p>
         <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
   <p><strong>Envio:</strong> $ 5.00</p>

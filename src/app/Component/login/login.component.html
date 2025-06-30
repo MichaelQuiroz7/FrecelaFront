@@ -2,21 +2,50 @@
 <div class="container" id="container" >
   <div class="form-container sign-up-container">
   </div>
-  <div class="form-container sign-in-container">
-    <form [formGroup]="loginForm" (ngSubmit)="login()">
-      <h1>Iniciar Sesión</h1>
-      <div class="social-container">
-        <!-- <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
-        <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a> -->
-      </div>
-      <input type="text" placeholder="Cédula" formControlName="cedula" />
-      <input type="password" placeholder="Contraseña" formControlName="contrasenia" />
-
-      <a href="#">Olvidaste tu Contraseña?</a>
-      <button type="submit">Ingresar</button>
-    </form>
+  <!-- Modal para mensajes de éxito o error -->
+<div class="modal" *ngIf="showMessageModal" (click)="cerrarMessageModal()">
+  <div class="modal-content" 
+       [ngClass]="{
+         'error-message': signUpMessage && signUpMessage.includes('Error'), 
+         'success-message': signUpMessage && !signUpMessage.includes('Error')
+       }" 
+       (click)="$event.stopPropagation()" 
+       aria-live="polite">
+    <div class="modal-header">
+      <h2>{{ signUpMessage && signUpMessage.includes('Error') ? 'Error' : 'Éxito' }}</h2>
+      <button class="modal-close" (click)="cerrarMessageModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <p>{{ signUpMessage }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="confirm-btn" (click)="cerrarMessageModal()">Aceptar</button>
+    </div>
   </div>
+</div>
+
+<div class="form-container sign-in-container">
+  <form [formGroup]="loginForm" (ngSubmit)="login()">
+    <h1>Iniciar Sesión</h1>
+    <div class="social-container">
+      <!-- <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+      <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+      <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a> -->
+    </div>
+    <input type="text" placeholder="Cédula" formControlName="cedula" [ngClass]="{'invalid': loginForm.get('cedula')?.invalid && loginForm.get('cedula')?.touched}" />
+    <div class="error-message" *ngIf="loginForm.get('cedula')?.invalid && loginForm.get('cedula')?.touched">
+      La cédula es requerida y debe tener 10 dígitos.
+    </div>
+    <input type="password" placeholder="Contraseña" formControlName="contrasenia" [ngClass]="{'invalid': loginForm.get('contrasenia')?.invalid && loginForm.get('contrasenia')?.touched}" />
+    <div class="error-message" *ngIf="loginForm.get('contrasenia')?.invalid && loginForm.get('contrasenia')?.touched">
+      La contraseña es requerida y debe tener al menos 6 caracteres.
+    </div>
+    <a href="#">Olvidaste tu Contraseña?</a>
+    <button type="submit" [disabled]="loading || loginForm.invalid">
+      {{ loading ? 'Cargando...' : 'Ingresar' }}
+    </button>
+  </form>
+</div>
   <div class="overlay-container">
     <div class="overlay">
       <div class="overlay-panel overlay-left">

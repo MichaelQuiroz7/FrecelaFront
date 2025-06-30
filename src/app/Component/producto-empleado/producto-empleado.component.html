@@ -604,21 +604,17 @@
             </select>
           </div>
           <p>
-            <strong>Subtotal (con descuento):</strong> ${{
-              calcularPrecioTotalConDescuento() | number : "1.2-2"
-            }}
-          </p>
+  <strong>Subtotal (con descuento):</strong> ${{ subtotalDescuento() | number : "1.2-2" }}
+</p>
           <p>
-            <strong>IVA (14%):</strong> ${{ calcularIVA() | number : "1.2-2" }}
-          </p>
+  <strong>IVA (15%):</strong> ${{ calcularIva15() | number : "1.2-2" }}
+</p>
           <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
             <p><strong>Envio:</strong> $ 5.00</p>
           </div>
           <p>
-            <strong>Total (con IVA):</strong> ${{
-              calcularTotalConIVA() | number : "1.2-2"
-            }}
-          </p>
+  <strong>Total (con IVA):</strong> ${{ calcularTotalIvaDescuentoEnvio() | number : "1.2-2" }}
+</p>
           <p>
             <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
             {{ saleDetails.apellidosCliente }}
