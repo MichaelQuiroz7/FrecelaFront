@@ -11,10 +11,15 @@
         <li><a (click)="navigateToNosotros()">NOSOTROS</a></li>
       </ul>
     </nav>
-    <div class="header-right">
-      <button class="action-button" (click)="consultarPedidos()">Consultar Pedidos</button>
-      <button class="action-button logout-button" (click)="cerrarSesion()">Cerrar Sesión</button>
-    </div>
+   <div class="header-right">
+  <ng-container *ngIf="isLoggedIn(); else notLoggedIn">
+    <button class="action-button" (click)="consultarPedidos()">Consultar Pedidos</button>
+    <button class="action-button logout-button" (click)="cerrarSesion()">Cerrar Sesión</button>
+  </ng-container>
+  <ng-template #notLoggedIn>
+    <button class="action-button login-button" (click)="iniciarSesion()">Iniciar Sesión</button>
+  </ng-template>
+</div>
     
   </header>
 </div>

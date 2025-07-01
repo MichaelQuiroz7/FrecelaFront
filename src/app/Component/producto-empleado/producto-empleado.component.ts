@@ -163,7 +163,19 @@ export class ProductoEmpleadoComponent {
     this.porcentajeDescuento = 0;
   }
 
+    isLoggedIn: boolean = false;
+
+  checkAuth() {
+    const requiredKeys = ['token', 'cedula', 'nombre', 'apellido', 'direccion'];
+    this.isLoggedIn = requiredKeys.every(key => !!localStorage.getItem(key));
+
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+    }
+  }
+
   ngOnInit(): void {
+    this.checkAuth();
     this.nombre = localStorage.getItem('nombre') || '';
     this.apellido = localStorage.getItem('apellido') || '';
     this.ceduladesc = localStorage.getItem('cedula') || '';

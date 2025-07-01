@@ -78,6 +78,10 @@ tipoEntrega: any;
     private router: Router
   ) {}
 
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('cliente');
+  }
+
   navigateToNosotros() {
     this.router.navigate(['Nosotros']);
   }
@@ -613,6 +617,10 @@ tipoEntrega: any;
 
    cerrarSesion(): void {
     localStorage.removeItem('cliente');
+    this.router.navigate(['/InicioSesion']);
+  }
+
+  iniciarSesion() {
     this.router.navigate(['/InicioSesion']);
   }
 
