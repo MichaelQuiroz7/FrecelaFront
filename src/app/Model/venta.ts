@@ -4,6 +4,7 @@ export interface Venta {
     IdProducto: number;
     Cantidad: number;
     PrecioUnitario: number;
+    Observaciones: string;
 }
 
 export interface DetalleVentaRequest {
@@ -24,6 +25,7 @@ export interface DetalleVentaResponse {
   cedulaCliente: string;
   direccionCliente: string;
   tipoEntrega: string;
+  observaciones: string;
 
 }
 
@@ -69,4 +71,11 @@ export interface Entrega{
   TipoEntrega: string;
   CostoEntrega: number;
   Direccion: string;
+}
+
+export interface ComprobanteConsulta {
+  idVenta: number;
+  estado: string;
+  imagenBase64: string;
+  fecha: Date | null;
 }

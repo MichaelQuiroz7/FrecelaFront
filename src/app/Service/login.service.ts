@@ -11,6 +11,7 @@ export class LoginService {
   private myAppUrl = environment.endpoint;
   private myApiUrl = 'api/Empleado/login';
   private myApiUrl2 = 'api/Empleado';
+  private myApiUrl3 = 'api/Imagen/ObtenerImagenesEmpleado';
   constructor(private http: HttpClient) { }
 
   // Obtener todos los empleados
@@ -37,5 +38,9 @@ export class LoginService {
   getDescuentoByCedula(cedula: string): Observable<Empleado> {
     return this.http.get<Empleado>(`${this.myAppUrl}${this.myApiUrl2}/descuento/${cedula}`);
   }
+
+  obtenerImagenesEmpleado(): Observable<any> {
+  return this.http.get(`${this.myAppUrl}${this.myApiUrl3}`);
+}
 
 }

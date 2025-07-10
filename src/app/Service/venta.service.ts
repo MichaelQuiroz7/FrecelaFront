@@ -20,6 +20,8 @@ export class VentaService {
   private myApiUrl6 = 'api/Venta/registrarEntrega';
   private myApiUrl7 = 'api/Venta/ventasPagadasORechazadasConDetalles';
   private myApiUrl8 = 'api/Venta/actualizarEstadoVenta';
+  private myApiUrl9 = 'api/Venta/ventasXAprobar';
+  private myApiUrl10 = 'api/Venta/ventasxCliente/';
 
   constructor(private http: HttpClient) {}
 
@@ -53,6 +55,15 @@ export class VentaService {
 
   actualizarEstadoVenta(updatedVenta: DetalleVentaConsulta) {
     return this.http.post(`${this.myAppUrl}${this.myApiUrl8}`, updatedVenta);
+  }
+
+  getVentasporAprobar(): Observable<any> {
+    return this.http.get(`${this.myAppUrl}${this.myApiUrl9}`);
+  }
+
+
+  getventasxCliente(cedula : string): Observable<any> {
+    return this.http.get(`${this.myAppUrl}${this.myApiUrl10}${cedula}`);  
   }
 
 }

@@ -9,20 +9,36 @@
   </header>
 
   <div class="search-bar">
-    <input
-      type="text"
-      [(ngModel)]="searchTerm"
-      (input)="buscarProductos()"
-      (keyup.enter)="buscarProductos()"
-      placeholder="Buscar productos..."
+    <input type="text" [(ngModel)]="searchTerm" (input)="buscarProductos()"
+      (keyup.enter)="buscarProductos()" placeholder="Buscar productos..."
+      autocomplete="on"
     />
-    <input
-      type="text"
-      [(ngModel)]="saleCode"
-      (input)="buscarVenta()"
-      (keyup.enter)="buscarVenta()"
+
+    <!-- (input)="buscarVenta()" -->
+    <!-- <input type="text" [(ngModel)]="saleCode" (keyup.enter)="buscarVenta()"
       placeholder="Buscar por código de venta..."
-    />
+      autocomplete="on"
+    /> -->
+
+    <div class="search-wrapper">
+  <input
+    type="text"
+    [(ngModel)]="saleCode"
+    (keyup.enter)="buscarVenta()"
+    (focus)="mostrarHistorial = true"
+    (blur)="ocultarHistorialConDelay()"
+    placeholder="Buscar por código de venta..."
+    autocomplete="off"
+  />
+  <ul *ngIf="mostrarHistorial" class="historial">
+    <li *ngFor="let item of historialBusqueda" (mousedown)="usarHistorial(item)">
+      {{ item }}
+    </li>
+  </ul>
+</div>
+
+
+
     <button (click)="limpiarBusqueda()">Limpiar</button>
   </div>
 
@@ -50,9 +66,14 @@
     </div>
 
     <div class="actions">
-    <div class="action-card" (click)="abrirModalVentas()">
+    <div class="action-card"  (click)="abrirModalVentas()">
       <span>Ver Ventas</span>
     </div>
+
+    <div class="action-card" *ngIf="userRole === '1'" (click)="abrirModalVentasPorAprobar()">
+      <span>Aprobar Ventas</span>
+    </div>
+
   </div>
 
 
@@ -313,7 +334,7 @@
   </div>
 
   <!-- Modal para añadir empleado -->
-  <div
+  <!-- <div
     class="modal add-employee"
     *ngIf="showAddEmployeeModal"
     (click)="cerrarModalAgregarEmpleado()"
@@ -495,7 +516,208 @@
         </form>
       </div>
     </div>
-  </div>
+  </div> -->
+
+
+<div
+    class="modal add-employee"
+    *ngIf="showAddEmployeeModal"
+    (click)="cerrarModalAgregarEmpleado()"
+>
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>Agregar Empleado</h2>
+            <button class="modal-close" (click)="cerrarModalAgregarEmpleado()">
+                ✖
+            </button>
+        </div>
+        <div class="modal-body">
+            <form [formGroup]="employeeForm" (ngSubmit)="guardarNuevoEmpleado()">
+                <div class="form-group">
+                    <label>Nombres:</label>
+                    <input
+                        type="text"
+                        formControlName="Nombres"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('Nombres')?.invalid &&
+                                employeeForm.get('Nombres')?.touched
+                        }"
+                    />
+                    <div
+                        *ngIf="
+                            employeeForm.get('Nombres')?.invalid &&
+                            employeeForm.get('Nombres')?.touched
+                        "
+                        class="error-message"
+                    >
+                        El nombre es requerido y solo puede contener letras y espacios.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Apellidos:</label>
+                    <input
+                        type="text"
+                        formControlName="Apellidos"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('Apellidos')?.invalid &&
+                                employeeForm.get('Apellidos')?.touched
+                        }"
+                    />
+                    <div
+                        *ngIf="
+                            employeeForm.get('Apellidos')?.invalid &&
+                            employeeForm.get('Apellidos')?.touched
+                        "
+                        class="error-message"
+                    >
+                        El apellido es requerido y solo puede contener letras y espacios.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cédula:</label>
+                    <input
+                        type="text"
+                        formControlName="Cedula"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('Cedula')?.invalid &&
+                                employeeForm.get('Cedula')?.touched
+                        }"
+                    />
+                    <div
+                        *ngIf="
+                            employeeForm.get('Cedula')?.invalid &&
+                            employeeForm.get('Cedula')?.touched
+                        "
+                        class="error-message"
+                    >
+                        La cédula debe tener exactamente 10 dígitos.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Nacimiento:</label>
+                    <input
+                        type="date"
+                        formControlName="FechaNacimiento"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('FechaNacimiento')?.invalid &&
+                                employeeForm.get('FechaNacimiento')?.touched
+                        }"
+                    />
+                    <div
+                        *ngIf="
+                            employeeForm.get('FechaNacimiento')?.invalid &&
+                            employeeForm.get('FechaNacimiento')?.touched
+                        "
+                        class="error-message"
+                    >
+                        La fecha de nacimiento es requerida.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Género:</label>
+                    <select
+                        formControlName="Genero"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('Genero')?.invalid &&
+                                employeeForm.get('Genero')?.touched
+                        }"
+                    >
+                        <option value="" disabled>Selecciona Género</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                    <div
+                        *ngIf="
+                            employeeForm.get('Genero')?.invalid &&
+                            employeeForm.get('Genero')?.touched
+                        "
+                        class="error-message"
+                    >
+                        El género es requerido.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <input
+                        type="tel"
+                        formControlName="Telefono"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('Telefono')?.invalid &&
+                                employeeForm.get('Telefono')?.touched
+                        }"
+                    />
+                    <div
+                        *ngIf="
+                            employeeForm.get('Telefono')?.invalid &&
+                            employeeForm.get('Telefono')?.touched
+                        "
+                        class="error-message"
+                    >
+                        El teléfono debe tener 10 dígitos.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input
+                        type="password"
+                        formControlName="contrasenia"
+                        class="form-control"
+                        [ngClass]="{
+                            invalid:
+                                employeeForm.get('contrasenia')?.invalid &&
+                                employeeForm.get('contrasenia')?.touched
+                        }"
+                    />
+                    <div
+                        *ngIf="
+                            employeeForm.get('contrasenia')?.invalid &&
+                            employeeForm.get('contrasenia')?.touched
+                        "
+                        class="error-message"
+                    >
+                        La contraseña es requerida y debe tener al menos 6 caracteres.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Imagen:</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        (change)="onImageSelected($event)"
+                        class="form-control"
+                    />
+                    <div *ngIf="imageError" class="error-message">
+                        {{ imageError }}
+                    </div>
+                </div>
+                <button
+                    type="submit"
+                    class="save-btn"
+                    [disabled]="employeeForm.invalid"
+                >
+                    Guardar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
 
   <!-- Modal para gestionar stock -->
   <div class="modal stock" *ngIf="showStockModal" (click)="cerrarModalStock()">
@@ -557,75 +779,84 @@
 
   <!-- Modal para detalles de venta -->
   <div
-    class="modal sale-details"
-    *ngIf="showSaleDetailsModal"
-    (click)="cerrarModalSaleDetails()"
-  >
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Detalles de la Venta</h2>
-        <button class="modal-close" (click)="cerrarModalSaleDetails()">
-          ✖
-        </button>
+  class="modal sale-details"
+  *ngIf="showSaleDetailsModal"
+  (click)="cerrarModalSaleDetails()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles de la Venta</h2>
+      <button class="modal-close" (click)="cerrarModalSaleDetails()">
+        ✖
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="saleDetailsError" class="error-message">
+        {{ saleDetailsError }}
       </div>
-      <div class="modal-body">
-        <div *ngIf="saleDetailsError" class="error-message">
-          {{ saleDetailsError }}
+      <div *ngIf="saleDetails">
+        <p><strong>Código:</strong> {{ saleDetails.code }}</p>
+        <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
+        <p>
+          <strong>Descripción:</strong>
+          {{ saleDetails.descripcionProducto || "N/A" }}
+        </p>
+        <p>
+          <strong>Precio Unitario:</strong> ${{ saleDetails.precioUnitario || "N/A" }}
+        </p>
+        <div class="form-group">
+          <label><strong>Cantidad:</strong></label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="saleDetails.cantidad"
+            (ngModelChange)="onQuantityOrDiscountChange($event, 'quantity')"
+            min="1"
+            step="1"
+            required
+          />
         </div>
-        <div *ngIf="saleDetails">
-          <p><strong>Código:</strong> {{ saleDetails.code }}</p>
-          <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
-          <p>
-            <strong>Descripción:</strong>
-            {{ saleDetails.descripcionProducto || "N/A" }}
-          </p>
-          <p>
-            <strong>Precio Unitario:</strong> ${{
-              saleDetails.precioUnitario || "N/A"
-            }}
-          </p>
-          <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
-          <p>
-            <strong>Precio Total (sin descuento):</strong> ${{
-              saleDetails.precioTotal || "N/A"
-            }}
-          </p>
-          <div class="form-group">
-            <label>Descuento (%):</label>
-            <select
-              id="descuento"
-              class="form-control discount-select"
-              [ngModel]="selectedDescuento"
-              (ngModelChange)="onDescuentoChange($event)"
-            >
-              <option *ngFor="let descuento of descuentos" [value]="descuento">
-                {{ descuento }}
-              </option>
-            </select>
-          </div>
-          <p>
-  <strong>Subtotal (con descuento):</strong> ${{ subtotalDescuento() | number : "1.2-2" }}
-</p>
-          <p>
-  <strong>IVA (15%):</strong> ${{ calcularIva15() | number : "1.2-2" }}
-</p>
-          <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
-            <p><strong>Envio:</strong> $ 5.00</p>
-          </div>
-          <p>
-  <strong>Total (con IVA):</strong> ${{ calcularTotalIvaDescuentoEnvio() | number : "1.2-2" }}
-</p>
-          <p>
-            <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
-            {{ saleDetails.apellidosCliente }}
-          </p>
-          <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
-          <!-- Indicador de carga -->
-          <div *ngIf="isGeneratingPDF" class="loading-bar">
-            <div class="spinner"></div>
-            <span>Generando PDF...</span>
-          </div>
-          <div class="modal-actions">
+        <p>
+          <strong>Precio Total (sin descuento):</strong> ${{ saleDetails.precioTotal || "N/A" }}
+        </p>
+        <div class="form-group">
+          <label>Descuento (%):</label>
+          <select
+            id="descuento"
+            class="form-control discount-select"
+            [ngModel]="selectedDescuento"
+            (ngModelChange)="onQuantityOrDiscountChange($event, 'discount')"
+          >
+            <option [value]="0">0</option>
+            <option *ngFor="let descuento of descuentos" [value]="descuento">
+              {{ descuento }}
+            </option>
+          </select>
+        </div>
+        <p>
+          <strong>Subtotal (con descuento):</strong> ${{ computeDiscountedSubtotal() | number : "1.2-2" }}
+        </p>
+        <p>
+          <strong>IVA (15%):</strong> ${{ computeTaxAmount() | number : "1.2-2" }}
+        </p>
+        <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
+          <p><strong>Envio:</strong> $ 5.00</p>
+        </div>
+        <p>
+          <strong>Total (con IVA):</strong> ${{ computeFinalTotal() | number : "1.2-2" }}
+        </p>
+        <p>
+          <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
+          {{ saleDetails.apellidosCliente }}
+        </p>
+        <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
+        <p><strong>Observaciones:</strong> {{ saleDetails.observaciones }}</p>
+        <!-- Indicador de carga -->
+        <div *ngIf="isGeneratingPDF" class="loading-bar">
+          <div class="spinner"></div>
+          <span>Generando PDF...</span>
+        </div>
+        <div class="modal-actions">
             <button class="cancel-btn" (click)="cerrarModalSaleDetails()">
               Cerrar
             </button>
@@ -633,10 +864,10 @@
               Generar Orden de Pago
             </button>
           </div>
-        </div>
       </div>
     </div>
   </div>
+</div>
 
   <!-- Modal para añadir descuento a empleado -->
   <div
@@ -773,7 +1004,7 @@
 </div>
 
 
-<!-- Modal for navigating sales -->
+<!-- Modal detalles consulta de las ventas -->
   <div class="modal sale-navigation" *ngIf="showSaleNavigationModal" (click)="cerrarModalVentas()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
@@ -818,6 +1049,7 @@
           <p><strong>Cantidad:</strong> {{ filteredVentas[currentSaleIndex].cantidad }}</p>
           <p><strong>Precio Total:</strong> ${{ filteredVentas[currentSaleIndex].precioTotal | number : '1.2-2' }}</p>
           <p><strong>Tipo de Entrega:</strong> {{ filteredVentas[currentSaleIndex].tipoEntrega }}</p>
+          <p><strong>Observaciones:</strong> {{ filteredVentas[currentSaleIndex].observaciones }}</p>
           <div class="form-group">
             <label><strong>Estado:</strong> {{ filteredVentas[currentSaleIndex].estadoEntrega }}</label>
             <select
@@ -875,6 +1107,134 @@
         <p class="warning-message">¡Este producto está por acabarse!</p>
         <div class="modal-actions">
           <button class="confirm-btn" (click)="aceptarProductoBajoStock()">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Modal para aprobar ventas -->
+<div class="modal sale-approval" *ngIf="showSaleApprovalModal" (click)="cerrarModalVentasPorAprobar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Aprobar Ventas en Espera</h2>
+      <button class="modal-close" (click)="cerrarModalVentasPorAprobar()">✖</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Barra de búsqueda -->
+      <div class="search-bar">
+        <input
+          type="text"
+          [(ngModel)]="approvalSearchTerm"
+          (input)="buscarVentasPorAprobar()"
+          (keyup.enter)="buscarVentasPorAprobar()"
+          placeholder="Buscar por ID de venta..."
+        />
+      </div>
+
+      <!-- Sin resultados -->
+      <div *ngIf="filteredApprovalVentas.length === 0" class="no-data">
+        No se encontraron ventas en espera para el ID ingresado.
+      </div>
+
+      <!-- Resultado actual -->
+      <div *ngIf="filteredApprovalVentas.length > 0 && filteredApprovalVentas[currentApprovalIndex]" class="sale-details">
+        <div class="navigation-controls">
+          <button
+            [disabled]="currentApprovalIndex === 0"
+            (click)="previousApproval()"
+            class="nav-btn"
+          >
+            ← Anterior
+          </button>
+          <span>Venta {{ currentApprovalIndex + 1 }} de {{ filteredApprovalVentas.length }}</span>
+          <button
+            [disabled]="currentApprovalIndex === filteredApprovalVentas.length - 1"
+            (click)="nextApproval()"
+            class="nav-btn"
+          >
+            Siguiente →
+          </button>
+        </div>
+
+        <!-- Detalles generales de la venta -->
+        <div class="section">
+          <h3>Detalles Generales</h3>
+          <p><strong>ID de Venta:</strong> {{ filteredApprovalVentas[currentApprovalIndex].idVenta }}</p>
+          <p><strong>Estado:</strong> {{ filteredApprovalVentas[currentApprovalIndex].estado }}</p>
+          <p><strong>Fecha:</strong> {{ filteredApprovalVentas[currentApprovalIndex].fecha | date:'yyyy-MM-dd' }}</p>
+        </div>
+
+        <!-- Detalles del producto -->
+        <div class="section">
+          <h3>Detalles del Producto</h3>
+          <p><strong>Nombre:</strong> {{ filteredApprovalVentas[currentApprovalIndex].nombreProducto }}</p>
+          <p><strong>Descripción:</strong> {{ filteredApprovalVentas[currentApprovalIndex].descripcionProducto }}</p>
+          <p><strong>Precio Unitario:</strong> ${{ filteredApprovalVentas[currentApprovalIndex].precioUnitario | number:'1.2-2' }}</p>
+          <p><strong>Cantidad:</strong> {{ filteredApprovalVentas[currentApprovalIndex].cantidad }}</p>
+          <p><strong>Precio Total:</strong> ${{ filteredApprovalVentas[currentApprovalIndex].precioTotal | number:'1.2-2' }}</p>
+        </div>
+
+        <!-- Detalles del cliente -->
+        <div class="section">
+          <h3>Detalles del Cliente</h3>
+          <p><strong>Nombre:</strong> {{ filteredApprovalVentas[currentApprovalIndex].nombresCliente }} {{ filteredApprovalVentas[currentApprovalIndex].apellidosCliente }}</p>
+          <p><strong>Cédula:</strong> {{ filteredApprovalVentas[currentApprovalIndex].cedulaCliente }}</p>
+          <p><strong>Dirección:</strong> {{ filteredApprovalVentas[currentApprovalIndex].direccionCliente }}</p>
+        </div>
+
+        <!-- Detalles de entrega -->
+        <div class="section">
+          <h3>Detalles de Entrega</h3>
+          <p><strong>Tipo de Entrega:</strong> {{ filteredApprovalVentas[currentApprovalIndex].tipoEntrega }}</p>
+          <p><strong>Observaciones:</strong> {{ filteredApprovalVentas[currentApprovalIndex].observaciones }}</p>
+        </div>
+
+        <!-- Imagen del comprobante -->
+        <div class="section">
+          <h3>Comprobante</h3>
+          <div *ngIf="filteredApprovalVentas[currentApprovalIndex].imagenBase64" class="image-preview">
+            <img 
+              [src]="'data:image/jpeg;base64,' + filteredApprovalVentas[currentApprovalIndex].imagenBase64"
+              alt="Comprobante de venta"
+            />
+          </div>
+          <div *ngIf="!filteredApprovalVentas[currentApprovalIndex].imagenBase64" class="no-image">
+            No hay imagen disponible.
+          </div>
+        </div>
+
+        <!-- Selector de estado -->
+        <div class="form-group">
+          <label><strong>Nuevo Estado:</strong></label>
+          <select
+            class="form-control"
+            [(ngModel)]="saleStatus[filteredApprovalVentas[currentApprovalIndex].idVenta]"
+          >
+            <option value="ESPERA" disabled>Espera</option>
+            <option value="PAGADO">Pagado</option>
+            <option value="RECHAZADO">Rechazado</option>
+          </select>
+        </div>
+
+        <!-- Acciones -->
+        <div class="modal-actions">
+          <button
+            class="save-btn"
+            (click)="guardarEstadoVentaEspera(filteredApprovalVentas[currentApprovalIndex].idVenta.toString())"
+          >
+            Guardar
+          </button>
+          <button class="cancel-btn" (click)="cerrarModalVentasPorAprobar()">Cancelar</button>
         </div>
       </div>
     </div>

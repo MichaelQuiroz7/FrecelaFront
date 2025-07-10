@@ -9,7 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { Producto } from '../../Model/producto';
+import { ComprobanteConsultados, ComprobanteConsultatres, DetalleVentaConsultatres, Producto } from '../../Model/producto';
 import { Imagen } from '../../Model/imagen';
 import { TipoProducto } from '../../Model/tipo-producto';
 import { TipoSubproducto } from '../../Model/tipo-sub-producto';
@@ -22,6 +22,7 @@ import {
   EmpleadoRequest,
 } from '../../Model/empleado';
 import {
+  ComprobanteConsulta,
   DetalleVentaRequest,
   DetalleVentaResponse,
   LatexRequest,
@@ -41,7 +42,7 @@ export class ProductoEmpleadoComponent {
   isGeneratingPDF: boolean = false;
   showStatsModal: boolean = false;
   selectedMonth: number = new Date().getMonth() + 1;
-
+  saleSearchHistory: string[] = [];
   showEditModal: boolean = false;
   showStockModal: boolean = false;
   showAddModal: boolean = false;
@@ -110,7 +111,11 @@ export class ProductoEmpleadoComponent {
   porcentajeDescuento: number;
   estadisticas: any = null;
   VentasPagadasRechazadas: any = null;
-
+  showSaleApprovalModal: boolean = false;
+  approvalSearchTerm: string = '';
+  approvalStatus: { [key: number]: string } = {};
+  filteredApprovalVentas: ComprobanteConsultatres[] = [];
+  currentApprovalIndex: number = 0;
   
 
   months = [
@@ -138,15 +143,11 @@ export class ProductoEmpleadoComponent {
   productosBajoStock: any;
   showLowStockModal: boolean = false;
   currentLowStockIndex: number = 0;
+  employeeForm: FormGroup;
+  imageError: string | null = null;
 
-  constructor(
-    private productosService: ProductosService,
-    private tiposProductoService: TiposProductoService,
-    private loginService: LoginService,
-    private ventaService: VentaService,
-    private router: Router,
-    private fb: FormBuilder
-  ) {
+  constructor( private productosService: ProductosService, private tiposProductoService: TiposProductoService, private loginService: LoginService, private ventaService: VentaService,
+    private router: Router, private fb: FormBuilder ) {
     this.empleadoForm = this.fb.group({
       Nombres: ['', [Validators.required, Validators.pattern(/^[A-Za-z\s]+$/)]],
       Apellidos: [
@@ -161,6 +162,18 @@ export class ProductoEmpleadoComponent {
     });
     this.subtotalIVA = 0;
     this.porcentajeDescuento = 0;
+    this.selectedDescuento = 0;
+
+    this.employeeForm = this.fb.group({
+      Nombres: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
+      Apellidos: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
+      Cedula: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      FechaNacimiento: ['', Validators.required],
+      Genero: ['', Validators.required],
+      Telefono: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      contrasenia: ['', [Validators.required, Validators.minLength(6)]],
+    });
+
   }
 
     isLoggedIn: boolean = false;
@@ -189,6 +202,7 @@ export class ProductoEmpleadoComponent {
     this.cargarTodasLasEstadisticas();
     this.obtenerVentasRechazos();
     this.obtenerProductosBajoStock();
+    this.buscarVentasPorAprobar();
   }
 
   obtenerDescuentos() {
@@ -658,35 +672,128 @@ calcularIva15(): number {
     this.showAddEmployeeModal = true;
   }
 
-  cerrarModalAgregarEmpleado(): void {
-    this.showAddEmployeeModal = false;
-    this.empleadoForm.reset();
-  }
+  // cerrarModalAgregarEmpleado(): void {
+  //   this.showAddEmployeeModal = false;
+  //   this.empleadoForm.reset();
+  // }
 
-  guardarNuevoEmpleado(): void {
-    if (this.empleadoForm.invalid) {
-      this.empleadoForm.markAllAsTouched();
+  // guardarNuevoEmpleado(): void {
+  //   if (this.empleadoForm.invalid) {
+  //     this.empleadoForm.markAllAsTouched();
+  //     alert('Por favor, completa correctamente todos los campos requeridos.');
+  //     return;
+  //   }
+
+  //   const empleadoRequest: EmpleadoRequest = {
+  //     Nombres: this.empleadoForm.value.Nombres,
+  //     Apellidos: this.empleadoForm.value.Apellidos,
+  //     Cedula: this.empleadoForm.value.Cedula,
+  //     FechaNacimiento: this.empleadoForm.value.FechaNacimiento,
+  //     Genero: this.empleadoForm.value.Genero,
+  //     Telefono: this.empleadoForm.value.Telefono,
+  //     contrasenia: this.empleadoForm.value.contrasenia,
+  //   };
+
+  //   console.log('Enviando empleado:', JSON.stringify(empleadoRequest, null, 2));
+
+  //   this.loginService.registrarEmpleado(empleadoRequest).subscribe({
+  //     next: (response: any) => {
+  //       alert('Empleado registrado exitosamente.');
+  //       this.cerrarModalAgregarEmpleado();
+  //       this.obtenerEmpleados(); // Refresh employee list
+  //     },
+  //     error: (error) => {
+  //       console.error('Error al registrar empleado:', error);
+  //       if (error.error && error.error.errors) {
+  //         const errorMessages = Object.values(error.error.errors)
+  //           .flat()
+  //           .join('\n');
+  //         alert(`Error al registrar el empleado:\n${errorMessages}`);
+  //       } else {
+  //         alert('Error al registrar el empleado. Por favor, intenta de nuevo.');
+  //       }
+  //     },
+  //   });
+  // }
+
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      // Validar tipo de archivo (solo imágenes)
+      if (!file.type.startsWith('image/')) {
+        this.imageError = 'Por favor, selecciona un archivo de imagen válido.';
+        this.selectedImage = null;
+        return;
+      }
+      // Validar tamaño (por ejemplo, máximo 5MB)
+      const maxSizeInMB = 5;
+      const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+      if (file.size > maxSizeInBytes) {
+        this.imageError = `El tamaño de la imagen no debe superar ${maxSizeInMB}MB.`;
+        this.selectedImage = null;
+        return;
+      }
+      this.selectedImage = file;
+      this.imageError = null;
+    } else {
+      this.selectedImage = null;
+      this.imageError = null;
+    }
+  }
+  
+
+ guardarNuevoEmpleado(): void {
+    if (this.employeeForm.invalid) {
+      this.employeeForm.markAllAsTouched();
       alert('Por favor, completa correctamente todos los campos requeridos.');
       return;
     }
 
     const empleadoRequest: EmpleadoRequest = {
-      Nombres: this.empleadoForm.value.Nombres,
-      Apellidos: this.empleadoForm.value.Apellidos,
-      Cedula: this.empleadoForm.value.Cedula,
-      FechaNacimiento: this.empleadoForm.value.FechaNacimiento,
-      Genero: this.empleadoForm.value.Genero,
-      Telefono: this.empleadoForm.value.Telefono,
-      contrasenia: this.empleadoForm.value.contrasenia,
+      Nombres: this.employeeForm.value.Nombres,
+      Apellidos: this.employeeForm.value.Apellidos,
+      Cedula: this.employeeForm.value.Cedula,
+      FechaNacimiento: this.employeeForm.value.FechaNacimiento,
+      Genero: this.employeeForm.value.Genero,
+      Telefono: this.employeeForm.value.Telefono,
+      contrasenia: this.employeeForm.value.contrasenia,
     };
 
-    console.log('Enviando empleado:', JSON.stringify(empleadoRequest, null, 2));
 
     this.loginService.registrarEmpleado(empleadoRequest).subscribe({
       next: (response: any) => {
-        alert('Empleado registrado exitosamente.');
-        this.cerrarModalAgregarEmpleado();
-        this.obtenerEmpleados(); // Refresh employee list
+        console.log('respuesta empleado', response);
+        const newEmployeeId = response.data.id;
+        console.log('Nuevo ID de empleado:', newEmployeeId);
+        const newEmployee = { ...empleadoRequest, id: newEmployeeId };
+
+        if (this.selectedImage) {
+          const formData = new FormData();
+          formData.append('Imagen', this.selectedImage);
+          formData.append('IdProducto', newEmployeeId.toString());
+
+          this.productosService.uploadImageEmpleado(formData).subscribe({
+            next: (imageResponse: any) => {
+              const imagePath = imageResponse.data.imagenUrl;
+              this.imagenes.push({
+                idImagen: imageResponse.data.idImagen,
+                idProducto: newEmployeeId,
+                imagenUrl: imagePath
+              });
+
+              this.finalizarGuardado();
+            },
+            error: (error) => {
+              console.error('Error al subir la imagen:', error);
+              alert('Empleado registrado, pero error al subir la imagen.');
+              this.finalizarGuardado();
+            },
+          });
+        } else {
+          this.finalizarGuardado();
+        }
       },
       error: (error) => {
         console.error('Error al registrar empleado:', error);
@@ -700,6 +807,21 @@ calcularIva15(): number {
         }
       },
     });
+  }
+
+private finalizarGuardado(): void {
+    this.employeeForm.reset();
+    this.selectedImage = null;
+    this.imageError = null;
+    this.obtenerEmpleados();
+    this.cerrarModalAgregarEmpleado();
+  }
+
+  cerrarModalAgregarEmpleado(): void {
+    this.showAddEmployeeModal = false;
+    this.employeeForm.reset();
+    this.selectedImage = null;
+    this.imageError = null;
   }
 
   cerrarModalAdministrarEmpleados(): void {
@@ -719,6 +841,16 @@ calcularIva15(): number {
   }
 
   buscarVenta(): void {
+
+
+    if (this.saleCode.trim()) {
+    if (!this.historialBusqueda.includes(this.saleCode)) {
+      this.historialBusqueda.unshift(this.saleCode);
+      this.historialBusqueda = this.historialBusqueda.slice(0, 6); 
+    }
+  }
+
+
     this.saleDetails = null;
     this.saleDetailsError = null;
     this.showSaleDetailsModal = false;
@@ -731,7 +863,7 @@ calcularIva15(): number {
 
     if (!this.isValidBase64(trimmedSaleCode)) {
       this.saleDetailsError =
-        'El código de venta no es una cadena válida en base64.';
+        'El código de venta no es válido.';
       this.showSaleDetailsModal = true;
       return;
     }
@@ -748,7 +880,7 @@ calcularIva15(): number {
         this.showSaleDetailsModal = true;
       },
       error: (error) => {
-        console.error('Error al obtener detalles de la venta:', error);
+        console.error('Error al obtener detalles de la venta:');
         let errorMessage =
           'Error al buscar la venta. Por favor, verifica el código e intenta de nuevo.';
         if (error.error && error.error.message) {
@@ -759,6 +891,7 @@ calcularIva15(): number {
         this.showSaleDetailsModal = true;
       },
     });
+
   }
 
   cerrarModalSaleDetails(): void {
@@ -934,6 +1067,30 @@ calcularIva15(): number {
       JSON.stringify(request),
       `orden_de_venta_${this.saleDetails.cedulaCliente}_${Date.now()}.pdf`
     );
+
+    // Mensaje whatsapp
+    const mensaje = `Orden de Pago\n` +
+                    `Código Venta : ${request.Productos[0].Codigo}\n` +
+                    `Cliente: ${request.Cliente}\n` +
+                    `Cédula: ${request.Cedula}\n` +
+                    `Fecha: ${request.Fecha}\n` +
+                    `Producto: ${request.Productos[0].Descripcion}\n` +
+                    `Cantidad: ${request.Productos[0].Cantidad}\n` +
+                    `Precio Unitario: $${request.Productos[0].PrecioUnitario.toFixed(2)}\n` +
+                    `Subtotal: $${request.SubtotalSinDescuento.toFixed(2)}\n` +
+                    `Descuento: $${request.Descuento.toFixed(2)}\n` +
+                    `Subtotal con Descuento: $${request.SubtotalConDescuento.toFixed(2)}\n` +
+                    `IVA: $${request.Iva.toFixed(2)}\n` +
+                    `Total: $${request.Total.toFixed(2)}\n`;
+
+   const telefonoLocal = this.saleDetails.cedulaCliente.startsWith('0')
+  ? this.saleDetails.cedulaCliente.substring(1)
+  : this.saleDetails.cedulaCliente;
+const telefonocliente = '593' + telefonoLocal;
+const mensajeEncoded = encodeURIComponent(mensaje);
+const whatsappUrl = `https://wa.me/${telefonocliente}?text=${mensajeEncoded}`;
+
+window.open(whatsappUrl, '_blank');
   }
 
   downloadLaTeXAsPDF(requestData: string, filename: string): void {
@@ -1325,5 +1482,165 @@ calcularIva15(): number {
   }
 
 
+ 
+  async abrirModalVentasPorAprobar(): Promise<void> {
+    this.showSaleApprovalModal = true;
+    await this.buscarVentasPorAprobar();
+    this.saleStatus = {};
+  }
+
+  cerrarModalVentasPorAprobar(): void {
+    this.showSaleApprovalModal = false;
+    this.approvalSearchTerm = '';
+    this.currentApprovalIndex = 0;
+  }
+
+  buscarVentasPorAprobar(): void {
+    this.ventaService.getVentasporAprobar().subscribe({
+      next: (response: any) => {
+        if (response.data) {
+          this.filteredApprovalVentas = response.data as ComprobanteConsultatres[];
+          console.log('Ventas por aprobar:', this.filteredApprovalVentas);
+        } else {
+          this.filteredApprovalVentas = [];
+          console.warn('No se encontraron datos o la respuesta no fue exitosa:', response?.Message || 'Sin mensaje');
+        }
+        if (this.approvalSearchTerm) {
+          this.filteredApprovalVentas = this.filteredApprovalVentas.filter(v => 
+            v.idVenta.toString().includes(this.approvalSearchTerm)
+          );
+        }
+        this.currentApprovalIndex = 0;
+      },
+      error: (error) => {
+        console.error('Error al obtener ventas por aprobar:', error);
+        this.filteredApprovalVentas = [];
+        alert('Error al obtener ventas por aprobar. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+
+  previousApproval(): void {
+    if (this.currentApprovalIndex > 0) {
+      this.currentApprovalIndex--;
+    }
+  }
+
+  nextApproval(): void {
+    if (this.currentApprovalIndex < this.filteredApprovalVentas.length - 1) {
+      this.currentApprovalIndex++;
+    }
+  }
+
+
+  guardarEstadoVentaEspera(idVenta: string): void {
+    const venta = this.filteredApprovalVentas.find((v: ComprobanteConsultatres) => v.idVenta.toString() === idVenta);
+    if (!venta) {
+      alert('Error: Venta no encontrada.');
+      return;
+    }
+
+    const updatedVenta: DetalleVentaConsultatres = {
+      Code: venta.code || '',
+      Message: venta.message || '',
+      NombreProducto: venta.nombreProducto || '',
+      DescripcionProducto: venta.descripcionProducto || null,
+      PrecioUnitario: venta.precioUnitario || null,
+      Cantidad: venta.cantidad || null,
+      PrecioTotal: venta.precioTotal || null,
+      NombresCliente: venta.nombresCliente || '',
+      ApellidosCliente: venta.apellidosCliente || '',
+      CedulaCliente: venta.cedulaCliente || '',
+      DireccionCliente: venta.direccionCliente || '',
+      TipoEntrega: venta.tipoEntrega || '',
+      EstadoEntrega: this.saleStatus[parseInt(idVenta, 10)] || 'ESPERA'
+    };
+
+    this.ventaService.actualizarEstadoVenta(updatedVenta).subscribe({
+      next: (response: any) => {
+        if (response) {
+          alert('Estado de la venta actualizado exitosamente.');
+          const index = this.filteredApprovalVentas.findIndex(v => v.idVenta.toString() === idVenta);
+          if (index !== -1) {
+            this.filteredApprovalVentas[index].estado = updatedVenta.EstadoEntrega;
+          }
+        } else {
+          alert('Error en la respuesta del servidor: ' + response.Message);
+        }
+      },
+      error: (error) => {
+        console.error('Error al actualizar el estado de la venta:', error);
+        alert('Error al actualizar el estado de la venta. Por favor, intenta de nuevo.');
+      },
+    });
+  }
+  
+  
+  // Calculate total without discount based on quantity and unit price
+  calculateBaseTotal(quantity: number): number {
+    if (this.saleDetails && this.saleDetails.precioUnitario) {
+      this.saleDetails.precioTotal = quantity * this.saleDetails.precioUnitario;
+      return this.saleDetails.precioTotal;
+    } else if (this.saleDetails) {
+      this.saleDetails.precioTotal = 0;
+      return this.saleDetails.precioTotal;
+    }
+    return 0;
+  }
+
+  // Calculate subtotal with discount applied
+  computeDiscountedSubtotal(): number {
+    const baseTotal = this.saleDetails?.precioTotal || 0;
+    const descuento = this.selectedDescuento ?? 0;
+    const discountAmount = baseTotal * (descuento / 100);
+    return baseTotal - discountAmount;
+  }
+
+  // Calculate 15% IVA on the discounted subtotal
+  computeTaxAmount(): number {
+    const subtotal = this.computeDiscountedSubtotal();
+    return subtotal * 0.15;
+  }
+
+  // Calculate final total including discount, IVA, and shipping if applicable
+  computeFinalTotal(): number {
+    const subtotal = this.computeDiscountedSubtotal();
+    const iva = this.computeTaxAmount();
+    const shipping = this.saleDetails?.tipoEntrega === 'ENTREGA A DOMICILIO' ? 5 : 0;
+    return subtotal + iva + shipping;
+  }
+
+  // Handle changes in quantity or discount
+  onQuantityOrDiscountChange(newValue: number, field: string): void {
+    if (field === 'quantity') {
+      if (this.saleDetails) {
+        this.saleDetails.cantidad = newValue;
+        this.calculateBaseTotal(newValue);
+      }
+    } else if (field === 'discount') {
+      this.selectedDescuento = newValue;
+    }
+    // Recalculate all dependent values
+    this.computeDiscountedSubtotal();
+    this.computeTaxAmount();
+    this.computeFinalTotal();
+  }
+
+historialBusqueda: string[] = [];
+mostrarHistorial = false;
+
+  usarHistorial(item: string) {
+  this.saleCode = item;
+  this.buscarVenta();
+  this.mostrarHistorial = false;
+}
+
+ocultarHistorialConDelay() {
+  setTimeout(() => {
+    this.mostrarHistorial = false;
+  }, 200); 
+}
+
+  
 
 }

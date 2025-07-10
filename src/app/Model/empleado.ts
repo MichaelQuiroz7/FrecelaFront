@@ -11,7 +11,7 @@ export interface Empleado {
 }
 
 export interface EmpleadoDTO {
-  idEmpleado: number;
+  id: number;
   nombres: string;
   apellidos: string;
   cedula: string;
@@ -38,4 +38,10 @@ export interface LoginRequest {
 export interface descuentoEmpleado {
   cedula: string;
   descuento: number;
+}
+
+
+interface ImagenEmpleado {
+  id: number;
+  imagenData: string;
 }

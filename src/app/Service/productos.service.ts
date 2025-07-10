@@ -14,6 +14,7 @@ export class ProductosService {
   private myApiUrl2 = 'stock';
   private myApiUrl3 = 'api/Imagen/SubirImagenes';
   private myApiUrl4 = 'api/Producto/ProductosBajoStock';
+  private myApiUrl5 = 'api/Imagen/SubirImagenEmpleado';
 
   constructor(private http: HttpClient) {}
 
@@ -40,17 +41,20 @@ export class ProductosService {
   }
 
   eliminarProducto(idProducto: number, idrol: number): Observable<any> {
-  return this.http.delete<any>(
-    `${this.myAppUrl}${this.myApiUrl}/${idProducto}?idrol=${idrol}`
-  );
-}
+    return this.http.delete<any>(
+      `${this.myAppUrl}${this.myApiUrl}/${idProducto}?idrol=${idrol}`
+    );
+  }
 
-
-  actualizarStock(idProducto: number, aumentar: boolean, cantidad: number): Observable<any> {
+  actualizarStock(
+    idProducto: number,
+    aumentar: boolean,
+    cantidad: number
+  ): Observable<any> {
     const body = {
-      IdProducto: idProducto, 
+      IdProducto: idProducto,
       aumentar: aumentar,
-      cantidad: cantidad
+      cantidad: cantidad,
     };
     return this.http.put<any>(`${this.myAppUrl}${this.myApiUrl2}`, body);
   }
@@ -60,15 +64,18 @@ export class ProductosService {
   }
 
   uploadImage(formData: FormData): Observable<any> {
-  return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagen`, formData);
-}
+    return this.http.post(
+      `${this.myAppUrl}${this.myApiUrlImage}/SubirImagen`,
+      formData
+    );
+  }
 
-//   uploadImages(formData: FormData): Observable<any> {
-// return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagenes`, formData);
-//   }
+  //   uploadImages(formData: FormData): Observable<any> {
+  // return this.http.post(`${this.myAppUrl}${this.myApiUrlImage}/SubirImagenes`, formData);
+  //   }
 
   uploadImages(formData: FormData): Observable<any> {
-return this.http.post(`${this.myAppUrl}${this.myApiUrl3}`, formData);
+    return this.http.post(`${this.myAppUrl}${this.myApiUrl3}`, formData);
   }
 
   eliminarImagen(idImagen: number): Observable<any> {
@@ -79,5 +86,7 @@ return this.http.post(`${this.myAppUrl}${this.myApiUrl3}`, formData);
     return this.http.get(`${this.myAppUrl}${this.myApiUrl4}`);
   }
 
-  
+  uploadImageEmpleado(formData: FormData): Observable<any> {
+    return this.http.post(`${this.myAppUrl}${this.myApiUrl5}`, formData);
+  }
 }

@@ -3,3 +3,8 @@ export interface Imagen {
   idProducto: number;
   imagenUrl: string;
 }
+
+export interface ImagenEmpeleado {
+  id: number;
+  imagenData: string;
+}
