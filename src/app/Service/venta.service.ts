@@ -22,6 +22,7 @@ export class VentaService {
   private myApiUrl8 = 'api/Venta/actualizarEstadoVenta';
   private myApiUrl9 = 'api/Venta/ventasXAprobar';
   private myApiUrl10 = 'api/Venta/ventasxCliente/';
+  private myApiUrl11 = 'api/Venta/ventasIdsBase64';
 
   constructor(private http: HttpClient) {}
 
@@ -66,4 +67,10 @@ export class VentaService {
     return this.http.get(`${this.myAppUrl}${this.myApiUrl10}${cedula}`);  
   }
 
+  getVentasIdsBase64(): Observable<any> {
+    return this.http.get(`${this.myAppUrl}${this.myApiUrl11}`);
+  }
+
 }
+
+

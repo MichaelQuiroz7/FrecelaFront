@@ -141,12 +141,40 @@ observaciones: string = '';
     });
   }
 
+  public cantidadError: string = '';
+
   seleccionarProducto(producto: Producto): void {
+    this.cantidadError ='';
     this.productoSeleccionado = producto;
     this.cantidad = 1;
     this.currentImageIndex = 0;
     this.filtrarImagenes(); // Filtra las imágenes al seleccionar un producto
   }
+
+  validarCantidad(): void {
+  if (!this.productoSeleccionado) {
+    this.cantidadError = 'No hay producto seleccionado';
+    return;
+  }
+
+  if (this.cantidad < 1) {
+    this.cantidadError = 'La cantidad debe ser mayor a 0';
+  } else if (this.cantidad > this.productoSeleccionado.stock) {
+    this.cantidadError = `La cantidad no puede ser mayor a las unidades disponibles (${this.productoSeleccionado.stock})`;
+  } else {
+    this.cantidadError = '';
+  }
+}
+
+  validarCantidadYAsesor(): void {
+    this.cantidadError = '';
+    this.validarCantidad(); 
+    if (!this.cantidadError) {
+      this.elegirAsesor();
+    }
+  }
+
+
 
   filtrarImagenes(): void {
     if (this.productoSeleccionado) {
@@ -301,6 +329,24 @@ observaciones: string = '';
   //       console.error('Error al obtener los empleados:', error);
   //     },
   //   });
+  // }
+
+   
+  
+
+  // validarCantidadYAsesor(): void {
+  //   if (!this.productoSeleccionado) {
+  //     this.cantidadError = 'No hay producto seleccionado.';
+  //     return;
+  //   }
+  //   if (this.cantidad > this.productoSeleccionado.stock) {
+  //     this.cantidadError = `La cantidad no puede ser mayor a las unidades disponibles (${this.productoSeleccionado.stock}).`;
+  //   } else if (this.cantidad <= 0) {
+  //     this.cantidadError = `La cantidad debe ser mayor a 0.`;
+  //   } else {
+  //     this.cantidadError = '';
+  //     this.elegirAsesor();
+  //   }
   // }
 
   elegirAsesor(): void {

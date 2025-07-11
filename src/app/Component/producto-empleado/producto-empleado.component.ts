@@ -203,6 +203,7 @@ export class ProductoEmpleadoComponent {
     this.obtenerVentasRechazos();
     this.obtenerProductosBajoStock();
     this.buscarVentasPorAprobar();
+    this.cargarHistorialBusqueda();
   }
 
   obtenerDescuentos() {
@@ -1035,7 +1036,9 @@ private finalizarGuardado(): void {
     const ivaRecalculado = this.calcularIva15();
     const totalFinal = this.calcularTotalIvaDescuentoEnvio();
 
-    const descuentoMonto =  this.saleDetails.precioTotal? 0 - subtotalConDescuento : 0; 
+    const descuentoMonto = this.saleDetails && this.saleDetails.precioUnitario != null && this.saleDetails.cantidad != null
+      ? (this.saleDetails.precioUnitario * this.saleDetails.cantidad) - subtotalConDescuento
+      : 0;
 
     const fecha = new Date().toLocaleDateString('es-EC', {
       year: 'numeric',
@@ -1078,7 +1081,7 @@ private finalizarGuardado(): void {
                     `Cantidad: ${request.Productos[0].Cantidad}\n` +
                     `Precio Unitario: $${request.Productos[0].PrecioUnitario.toFixed(2)}\n` +
                     `Subtotal: $${request.SubtotalSinDescuento.toFixed(2)}\n` +
-                    `Descuento: $${request.Descuento.toFixed(2)}\n` +
+                    `Descuento: $${descuentoMonto.toFixed(2)}\n` +
                     `Subtotal con Descuento: $${request.SubtotalConDescuento.toFixed(2)}\n` +
                     `IVA: $${request.Iva.toFixed(2)}\n` +
                     `Total: $${request.Total.toFixed(2)}\n`;
@@ -1629,11 +1632,30 @@ window.open(whatsappUrl, '_blank');
 historialBusqueda: string[] = [];
 mostrarHistorial = false;
 
+ cargarHistorialBusqueda(): void {
+    this.ventaService.getVentasIdsBase64().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.historialBusqueda = response.data; 
+          console.log('Historial de búsqueda cargado:', this.historialBusqueda);
+        } else {
+          this.historialBusqueda = [];
+          this.saleDetailsError = response.message || 'No se pudieron cargar los códigos de venta';
+        }
+      },
+      error: (err) => {
+        this.historialBusqueda = [];
+        this.saleDetailsError = 'Error al cargar los códigos de venta: ' + err.message;
+      }
+    });
+  }
+
   usarHistorial(item: string) {
   this.saleCode = item;
   this.buscarVenta();
   this.mostrarHistorial = false;
 }
+
 
 ocultarHistorialConDelay() {
   setTimeout(() => {
@@ -1641,6 +1663,19 @@ ocultarHistorialConDelay() {
   }, 200); 
 }
 
+
+  showEnlargedImage: boolean = false;
+  enlargedImageBase64: string = '';
+
+enlargeImage(base64: string): void {
+    this.enlargedImageBase64 = base64;
+    this.showEnlargedImage = true;
+  }
+
+  closeEnlargedImage(): void {
+    this.showEnlargedImage = false;
+    this.enlargedImageBase64 = '';
+  }
   
 
 }

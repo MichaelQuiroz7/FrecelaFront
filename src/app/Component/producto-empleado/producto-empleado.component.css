@@ -966,11 +966,14 @@ ng-select .ng-select-container {
   position: absolute;
   background: white;
   border: 1px solid #ccc;
+  height: 35vh;
   width: 100%;
   z-index: 10;
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 .historial li {
   padding: 8px;

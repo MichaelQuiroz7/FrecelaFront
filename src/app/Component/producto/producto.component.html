@@ -16,8 +16,8 @@
     <div class="header-right">
       <ng-container *ngIf="isLoggedIn(); else notLoggedIn">
         <button class="action-button" (click)="showSalesHistory()">
-      Historial Pedidos
-    </button>
+          Historial Pedidos
+        </button>
         <button class="action-button" (click)="consultarPedidos()">
           Consultar Pedidos
         </button>
@@ -85,20 +85,21 @@
 <div class="contenedor-galeria">
   <!-- Galería de productos -->
   <div class="productos-container">
-    <div
-      class="producto"
-      *ngFor="let producto of productos"
-      (click)="seleccionarProducto(producto)"
-    >
-      <img
-        [src]="obtenerImagenDeProducto(producto.idProducto)"
-        alt="{{ producto.nombre }}"
-        class="producto-img"
-      />
-      <h3 class="productName">{{ producto.nombre }}</h3>
-      <h3 class="productName">Unidades existentes: {{ producto.stock }}</h3>
-
-    </div>
+    <ng-container *ngFor="let producto of productos">
+      <div
+        class="producto"
+        *ngIf="producto.stock > 0"
+        (click)="seleccionarProducto(producto)"
+      >
+        <img
+          [src]="obtenerImagenDeProducto(producto.idProducto)"
+          alt="{{ producto.nombre }}"
+          class="producto-img"
+        />
+        <h3 class="productName">{{ producto.nombre }}</h3>
+        <h3 class="productName">Unidades existentes: {{ producto.stock }}</h3>
+      </div>
+    </ng-container>
   </div>
 
   <!-- Panel lateral de detalles -->
@@ -154,10 +155,29 @@
         </p>
       </div>
 
-      <!-- Selección de cantidad -->
       <div class="seleccion-cantidad">
-        <label for="cantidad">Cantidad:</label>
-        <input type="number" id="cantidad" [(ngModel)]="cantidad" min="1" />
+  <label for="cantidad">Cantidad:</label>
+  <input
+  type="number"
+  id="cantidad"
+  [(ngModel)]="cantidad"
+  min="1"
+  [max]="productoSeleccionado.stock"
+  (ngModelChange)="validarCantidad()"
+  [disabled]="!productoSeleccionado"
+  required
+  [ngClass]="{ 'input-error': cantidadError }"
+/>
+
+</div>
+
+<!-- Mensaje de error para cantidad -->
+<div class="error-messageCantidad" *ngIf="cantidadError">
+  {{ cantidadError }}
+</div>
+
+      <div class="precio-total">
+        <p>Precios no Incluyen IVA</p>
       </div>
 
       <!-- Precio total calculado -->
@@ -166,22 +186,28 @@
       </div>
 
       <div class="tipoentrega">
-  <label for="tipoEntrega">Tipo de entrega:</label>
-  <select id="tipoEntrega" [(ngModel)]="tipoEntrega">
-    <option value="ENTREGA A DOMICILIO">Entrega a Domicilio</option>
-    <option value="RETIRAR EN LOCAL">Retiro en tienda</option>
-  </select>
-</div>
+        <label for="tipoEntrega">Tipo de entrega:</label>
+        <select id="tipoEntrega" [(ngModel)]="tipoEntrega">
+          <option value="ENTREGA A DOMICILIO">Entrega a Domicilio</option>
+          <option value="RETIRAR EN LOCAL">Retiro en tienda</option>
+        </select>
+      </div>
 
       <div class="observaciones">
-  <label for="observaciones">Observaciones:</label>
-  <textarea id="observaciones" [(ngModel)]="observaciones"></textarea>
-</div>
+        <label for="observaciones">Observaciones:</label>
+        <textarea id="observaciones" [(ngModel)]="observaciones"></textarea>
+      </div>
       <!-- Contenedor 5: Botones -->
       <div class="contenedor-botones">
-        <div class="boton-asesor">
+        <!-- <div class="boton-asesor">
           <button (click)="elegirAsesor()">Elegir asesor</button>
-        </div>
+        </div> -->
+        <div class="boton-asesor">
+  <button (click)="elegirAsesor()" [disabled]="cantidad > (productoSeleccionado?.stock ?? 0) || cantidad < 1 || !!cantidadError">
+    Elegir asesor
+  </button>
+</div>
+
         <div class="boton-cerrar">
           <button (click)="cerrarPanel()">Cerrar</button>
         </div>
@@ -262,157 +288,144 @@
   </div>
 </div>
 
-  <!-- Modal para ingresar código de pedido (Funcionalidad Existente) -->
-  <div
-    class="modal"
-    *ngIf="showSaleDetailsModal"
-    (click)="cerrarModalSaleDetails()"
-  >
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Consultar Pedido</h2>
-        <button class="modal-close" (click)="cerrarModalSaleDetails()">
-          ✖
-        </button>
+<!-- Modal para ingresar código de pedido (Funcionalidad Existente) -->
+<div
+  class="modal"
+  *ngIf="showSaleDetailsModal"
+  (click)="cerrarModalSaleDetails()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Consultar Pedido</h2>
+      <button class="modal-close" (click)="cerrarModalSaleDetails()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="saleCode">Ingrese el código del pedido:</label>
+        <input
+          type="text"
+          id="saleCode"
+          [(ngModel)]="saleCode"
+          (keyup.enter)="buscarVenta()"
+        />
+        <button class="action-button" (click)="buscarVenta()">Aceptar</button>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="saleCode">Ingrese el código del pedido:</label>
-          <input
-            type="text"
-            id="saleCode"
-            [(ngModel)]="saleCode"
-            (keyup.enter)="buscarVenta()"
-          />
-          <button class="action-button" (click)="buscarVenta()">Aceptar</button>
-        </div>
-        <div *ngIf="saleDetailsError" class="error-message">
-          {{ saleDetailsError }}
-        </div>
+      <div *ngIf="saleDetailsError" class="error-message">
+        {{ saleDetailsError }}
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Modal para detalles de venta (Funcionalidad Existente) -->
-  <div
-    class="modal sale-details"
-    *ngIf="showSaleDetailsModal && saleDetails"
-    (click)="cerrarModalSaleDetails()"
-  >
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Detalles de la Venta</h2>
-        <button class="modal-close" (click)="cerrarModalSaleDetails()">
-          ✖
-        </button>
-      </div>
-      <div class="modal-body">
-        <div *ngIf="saleDetailsError" class="error-message">
-          {{ saleDetailsError }}
-        </div>
-        <div *ngIf="saleDetails">
-          <p><strong>Código:</strong> {{ saleDetails.code }}</p>
-          <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
-          <p>
-            <strong>Descripción:</strong>
-            {{ saleDetails.descripcionProducto || "N/A" }}
-          </p>
-          <p>
-            <strong>Precio Unitario:</strong> ${{
-              saleDetails.precioUnitario || "N/A"
-            }}
-          </p>
-          <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
-          <p>
-            <strong>Precio Total (sin descuento):</strong> ${{
-              saleDetails.precioTotal || "N/A"
-            }}
-          </p>
-          <p>
-            <strong>Descuento: </strong>
-            {{
-              saleDetails.precioTotal != null
-                ? (saleDetails.precioTotal * 0.05 | number : "1.2-2")
-                : "N/A"
-            }}
-          </p>
-          <p>
-            <strong>Subtotal (con descuento):</strong> ${{
-              calcularSubtotalDescuento() | number : "1.2-2"
-            }}
-          </p>
-          <p>
-            <strong>IVA (15%):</strong> ${{ calcularIVA() | number : "1.2-2" }}
-          </p>
-          <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
-            <p><strong>Envio:</strong> $ 5.00</p>
-          </div>
-          <p>
-            <strong>Total (con IVA):</strong> ${{
-              calcularTotalConIVA() | number : "1.2-2"
-            }}
-          </p>
-          <p>
-            <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
-            {{ saleDetails.apellidosCliente }}
-          </p>
-          <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
-          <div class="modal-actions">
-            <button class="cancel-btn" (click)="cerrarModalSaleDetails()">
-              Cancelar
-            </button>
-            <button class="save-btn" (click)="showPaymentModal = true">
-              Pagar
-            </button>
-          </div>
-        </div>
-      </div>
+<!-- Modal para detalles de venta (Funcionalidad Existente) -->
+<div
+  class="modal sale-details"
+  *ngIf="showSaleDetailsModal && saleDetails"
+  (click)="cerrarModalSaleDetails()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles de la Venta</h2>
+      <button class="modal-close" (click)="cerrarModalSaleDetails()">✖</button>
     </div>
-  </div>
-
-  <!-- Modal para subir comprobante (Funcionalidad Existente) -->
-  <div
-    class="modal"
-    *ngIf="showPaymentModal"
-    (click)="showPaymentModal = false"
-  >
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Subir Comprobante de Transferencia</h2>
-        <button class="modal-close" (click)="showPaymentModal = false">
-          ✖
-        </button>
+    <div class="modal-body">
+      <div *ngIf="saleDetailsError" class="error-message">
+        {{ saleDetailsError }}
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="comprobanteFile"
-            >Seleccione el comprobante (imagen):</label
-          >
-          <input
-            type="file"
-            id="comprobanteFile"
-            (change)="onFileSelected($event)"
-            accept="image/*"
-          />
+      <div *ngIf="saleDetails">
+        <p><strong>Código:</strong> {{ saleDetails.code }}</p>
+        <p><strong>Producto:</strong> {{ saleDetails.nombreProducto }}</p>
+        <p>
+          <strong>Descripción:</strong>
+          {{ saleDetails.descripcionProducto || "N/A" }}
+        </p>
+        <p>
+          <strong>Precio Unitario:</strong> ${{
+            saleDetails.precioUnitario || "N/A"
+          }}
+        </p>
+        <p><strong>Cantidad:</strong> {{ saleDetails.cantidad || "N/A" }}</p>
+        <p>
+          <strong>Precio Total (sin descuento):</strong> ${{
+            saleDetails.precioTotal || "N/A"
+          }}
+        </p>
+        <p>
+          <strong>Descuento: </strong>
+          {{
+            saleDetails.precioTotal != null
+              ? (saleDetails.precioTotal * 0.05 | number : "1.2-2")
+              : "N/A"
+          }}
+        </p>
+        <p>
+          <strong>Subtotal (con descuento):</strong> ${{
+            calcularSubtotalDescuento() | number : "1.2-2"
+          }}
+        </p>
+        <p>
+          <strong>IVA (15%):</strong> ${{ calcularIVA() | number : "1.2-2" }}
+        </p>
+        <div *ngIf="saleDetails.tipoEntrega === 'ENTREGA A DOMICILIO'">
+          <p><strong>Envio:</strong> $ 5.00</p>
         </div>
+        <p>
+          <strong>Total (con IVA):</strong> ${{
+            calcularTotalConIVA() | number : "1.2-2"
+          }}
+        </p>
+        <p>
+          <strong>Cliente:</strong> {{ saleDetails.nombresCliente }}
+          {{ saleDetails.apellidosCliente }}
+        </p>
+        <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
         <div class="modal-actions">
-          <button class="cancel-btn" (click)="showPaymentModal = false">
+          <button class="cancel-btn" (click)="cerrarModalSaleDetails()">
             Cancelar
           </button>
-          <button
-            class="save-btn"
-            (click)="subirComprobanteIdVenta()"
-            [disabled]="!selectedFile"
-          >
-            Subir comprobante
+          <button class="save-btn" (click)="showPaymentModal = true">
+            Pagar
           </button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
+<!-- Modal para subir comprobante (Funcionalidad Existente) -->
+<div class="modal" *ngIf="showPaymentModal" (click)="showPaymentModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Subir Comprobante de Transferencia</h2>
+      <button class="modal-close" (click)="showPaymentModal = false">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="comprobanteFile">Seleccione el comprobante (imagen):</label>
+        <input
+          type="file"
+          id="comprobanteFile"
+          (change)="onFileSelected($event)"
+          accept="image/*"
+        />
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="showPaymentModal = false">
+          Cancelar
+        </button>
+        <button
+          class="save-btn"
+          (click)="subirComprobanteIdVenta()"
+          [disabled]="!selectedFile"
+        >
+          Subir comprobante
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <!--  Modal historial de Pedidos por cliente -->
+<!--  Modal historial de Pedidos por cliente -->
 <div
   class="modal sales-history"
   *ngIf="showSalesHistoryModal"
@@ -421,9 +434,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Historial de Pedidos</h2>
-      <button class="modal-close" (click)="closeSalesHistoryModal()">
-        ✖
-      </button>
+      <button class="modal-close" (click)="closeSalesHistoryModal()">✖</button>
     </div>
     <div class="modal-body">
       <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -444,8 +455,8 @@
               <td>{{ sale.idVenta }}</td>
               <td>{{ sale.nombreProducto }}</td>
               <td>{{ sale.cantidad }}</td>
-              <td>${{ sale.precioTotal | number : '1.2-2' }}</td>
-              <td>{{ sale.fecha | date:'yyyy-MM-dd' }}</td>
+              <td>${{ sale.precioTotal | number : "1.2-2" }}</td>
+              <td>{{ sale.fecha | date : "yyyy-MM-dd" }}</td>
               <td>{{ sale.estado }}</td>
             </tr>
           </tbody>
@@ -463,8 +474,8 @@
   </div>
 </div>
 
-  <!-- Nuevo Modal para buscar pedido por ID de Venta -->
-  <!-- <div class="modal" *ngIf="showIdVentaModal" (click)="cerrarModalIdVenta()">
+<!-- Nuevo Modal para buscar pedido por ID de Venta -->
+<!-- <div class="modal" *ngIf="showIdVentaModal" (click)="cerrarModalIdVenta()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Buscar Pedido por ID</h2>
@@ -509,7 +520,7 @@
   </div>
 </div> -->
 
-  <!-- Nuevo Modal para subir comprobante por ID de Venta
+<!-- Nuevo Modal para subir comprobante por ID de Venta
 <div class="modal" *ngIf="showIdVentaPaymentModal" (click)="cerrarModalPagoIdVenta()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
