@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DetalleVentaConsulta, DetalleVentaRequest, Entrega, LatexRequest, Venta } from '../Model/venta';
+import { IngresarVentaRequest } from '../Model/ingresar-venta-request';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,8 @@ export class VentaService {
   private myApiUrl9 = 'api/Venta/ventasXAprobar';
   private myApiUrl10 = 'api/Venta/ventasxCliente/';
   private myApiUrl11 = 'api/Venta/ventasIdsBase64';
+  private myApiUrl12 = 'api/Venta/ventasxEmpleado/';
+  private myApiUrl13 = 'api/Venta/ingresar';
 
   constructor(private http: HttpClient) {}
 
@@ -69,6 +72,14 @@ export class VentaService {
 
   getVentasIdsBase64(): Observable<any> {
     return this.http.get(`${this.myAppUrl}${this.myApiUrl11}`);
+  }
+
+  getventasxVendedor(cedula : string): Observable<any> {
+    return this.http.get(`${this.myAppUrl}${this.myApiUrl12}${cedula}`);  
+  }
+
+  ingresarVentaEmpleado(venta: IngresarVentaRequest): Observable<any> {
+    return this.http.post(`${this.myAppUrl}${this.myApiUrl13}`, venta);
   }
 
 }

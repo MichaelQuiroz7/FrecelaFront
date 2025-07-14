@@ -49,7 +49,6 @@ export class ProductoComponent implements OnInit {
     stock: 0,
     idTipoProducto: 0,
     idTipoSubproducto: 0,
-    
   };
   clienteNombre: string = '';
   showSaleDetailsModal: boolean = false;
@@ -79,7 +78,7 @@ export class ProductoComponent implements OnInit {
   idVentaComprobanteHora: string | null = null;
   idVentaComprobanteError: string | null = null;
   tipoEntrega: any;
-observaciones: string = '';
+  observaciones: string = '';
 
   constructor(
     private productosService: ProductosService,
@@ -144,7 +143,7 @@ observaciones: string = '';
   public cantidadError: string = '';
 
   seleccionarProducto(producto: Producto): void {
-    this.cantidadError ='';
+    this.cantidadError = '';
     this.productoSeleccionado = producto;
     this.cantidad = 1;
     this.currentImageIndex = 0;
@@ -152,29 +151,27 @@ observaciones: string = '';
   }
 
   validarCantidad(): void {
-  if (!this.productoSeleccionado) {
-    this.cantidadError = 'No hay producto seleccionado';
-    return;
-  }
+    if (!this.productoSeleccionado) {
+      this.cantidadError = 'No hay producto seleccionado';
+      return;
+    }
 
-  if (this.cantidad < 1) {
-    this.cantidadError = 'La cantidad debe ser mayor a 0';
-  } else if (this.cantidad > this.productoSeleccionado.stock) {
-    this.cantidadError = `La cantidad no puede ser mayor a las unidades disponibles (${this.productoSeleccionado.stock})`;
-  } else {
-    this.cantidadError = '';
+    if (this.cantidad < 1) {
+      this.cantidadError = 'La cantidad debe ser mayor a 0';
+    } else if (this.cantidad > this.productoSeleccionado.stock) {
+      this.cantidadError = `La cantidad no puede ser mayor a las unidades disponibles (${this.productoSeleccionado.stock})`;
+    } else {
+      this.cantidadError = '';
+    }
   }
-}
 
   validarCantidadYAsesor(): void {
     this.cantidadError = '';
-    this.validarCantidad(); 
+    this.validarCantidad();
     if (!this.cantidadError) {
       this.elegirAsesor();
     }
   }
-
-
 
   filtrarImagenes(): void {
     if (this.productoSeleccionado) {
@@ -331,9 +328,6 @@ observaciones: string = '';
   //   });
   // }
 
-   
-  
-
   // validarCantidadYAsesor(): void {
   //   if (!this.productoSeleccionado) {
   //     this.cantidadError = 'No hay producto seleccionado.';
@@ -358,6 +352,8 @@ observaciones: string = '';
     this.showModal = false;
     this.empleados = [];
   }
+
+  pedidoRealizado: boolean = false;
 
   seleccionarAsesor(empleado: EmpleadoDTO): void {
     if (!this.productoSeleccionado) {
@@ -447,7 +443,26 @@ observaciones: string = '';
         } else {
           console.error('Error en la venta:', response.message);
         }
-        this.cerrarModal();
+
+        this.pedidoRealizado = true;
+        setTimeout(() => {
+          this.pedidoRealizado = false;
+
+          // Limpiar campos
+          this.productoSeleccionado = null;
+          this.cantidad = 1;
+          this.tipoEntrega = '';
+          this.observaciones = '';
+          this.cantidadError = '';
+
+          // Cerrar el panel/modal
+          this.cerrarModal();
+          this.cerrarPanel();
+
+          // Recargar datos con ngOnInit
+          this.ngOnInit();
+        }, 15000);
+        alert('Pedido realizado exitosamente.');
       },
       error: (error) => {
         console.error('Error al registrar la venta:', error);
@@ -485,8 +500,7 @@ observaciones: string = '';
       },
       error: (error) => {
         console.error('PEDIDO NO EXISTE');
-        let errorMessage =
-          'PEDIDO NO EXISTE';
+        let errorMessage = 'PEDIDO NO EXISTE';
         this.saleDetails = null;
         this.saleDetailsError = errorMessage;
       },
@@ -676,13 +690,12 @@ observaciones: string = '';
       console.warn(`ID de empleado inválido: ${idEmpleado}`);
       return null;
     }
-    const imagen = this.imagenesEmpleados.find(img => img.id === idEmpleado);
+    const imagen = this.imagenesEmpleados.find((img) => img.id === idEmpleado);
     if (!imagen) {
       return null;
     }
     return imagen.imagenData;
   }
-
 
   // Método para obtener imágenes de empleados
   obtenerImagenesEmpleado(): void {
@@ -690,9 +703,12 @@ observaciones: string = '';
       next: (response: any) => {
         this.imagenesEmpleados = response.data.map((img: any) => ({
           id: img.id,
-          imagenData: img.imagenData
+          imagenData: img.imagenData,
         }));
-        console.log('Imágenes de empleados actualizadas:', this.imagenesEmpleados);
+        console.log(
+          'Imágenes de empleados actualizadas:',
+          this.imagenesEmpleados
+        );
       },
       error: (error) => {
         alert('Error al obtener las imágenes de empleados.');
@@ -741,13 +757,15 @@ observaciones: string = '';
             this.errorMessage = '';
           } else {
             this.sales = [];
-            this.errorMessage = response.error || 'No se encontraron ventas para este cliente';
+            this.errorMessage =
+              response.error || 'No se encontraron ventas para este cliente';
           }
         },
         error: (err) => {
           this.sales = [];
-          this.errorMessage = 'Error al cargar el historial de ventas: ' + err.message;
-        }
+          this.errorMessage =
+            'Error al cargar el historial de ventas: ' + err.message;
+        },
       });
     } else {
       this.clienteNombre = '';
@@ -755,7 +773,6 @@ observaciones: string = '';
       this.errorMessage = 'No hay datos de cliente en localStorage.';
     }
   }
-
 
   //#ENDREGION
 

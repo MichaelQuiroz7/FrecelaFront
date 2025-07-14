@@ -156,25 +156,24 @@
       </div>
 
       <div class="seleccion-cantidad">
-  <label for="cantidad">Cantidad:</label>
-  <input
-  type="number"
-  id="cantidad"
-  [(ngModel)]="cantidad"
-  min="1"
-  [max]="productoSeleccionado.stock"
-  (ngModelChange)="validarCantidad()"
-  [disabled]="!productoSeleccionado"
-  required
-  [ngClass]="{ 'input-error': cantidadError }"
-/>
+        <label for="cantidad">Cantidad:</label>
+        <input
+          type="number"
+          id="cantidad"
+          [(ngModel)]="cantidad"
+          min="1"
+          [max]="productoSeleccionado.stock"
+          (ngModelChange)="validarCantidad()"
+          [disabled]="!productoSeleccionado"
+          required
+          [ngClass]="{ 'input-error': cantidadError }"
+        />
+      </div>
 
-</div>
-
-<!-- Mensaje de error para cantidad -->
-<div class="error-messageCantidad" *ngIf="cantidadError">
-  {{ cantidadError }}
-</div>
+      <!-- Mensaje de error para cantidad -->
+      <div class="error-messageCantidad" *ngIf="cantidadError">
+        {{ cantidadError }}
+      </div>
 
       <div class="precio-total">
         <p>Precios no Incluyen IVA</p>
@@ -203,10 +202,17 @@
           <button (click)="elegirAsesor()">Elegir asesor</button>
         </div> -->
         <div class="boton-asesor">
-  <button (click)="elegirAsesor()" [disabled]="cantidad > (productoSeleccionado?.stock ?? 0) || cantidad < 1 || !!cantidadError">
-    Elegir asesor
-  </button>
-</div>
+          <button
+            (click)="elegirAsesor()"
+            [disabled]="
+              cantidad > (productoSeleccionado?.stock ?? 0) ||
+              cantidad < 1 ||
+              !!cantidadError
+            "
+          >
+            Elegir asesor
+          </button>
+        </div>
 
         <div class="boton-cerrar">
           <button (click)="cerrarPanel()">Cerrar</button>
@@ -286,6 +292,11 @@
       </div>
     </div>
   </div>
+</div>
+
+<div *ngIf="pedidoRealizado" class="pedido-success">
+  <div class="spinner-check"></div>
+  <span>Realizando Pedido. Nuestro asesor muy pronto atenderá su pedido.</span>
 </div>
 
 <!-- Modal para ingresar código de pedido (Funcionalidad Existente) -->

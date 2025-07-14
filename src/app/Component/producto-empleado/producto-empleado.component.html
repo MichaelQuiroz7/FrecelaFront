@@ -18,28 +18,7 @@
       autocomplete="on"
     />
 
-    <!-- (input)="buscarVenta()" -->
-    <!-- <input type="text" [(ngModel)]="saleCode" (keyup.enter)="buscarVenta()"
-      placeholder="Buscar por código de venta..."
-      autocomplete="on"
-    /> -->
-
-    <!-- <div class="search-wrapper">
-  <input
-    type="text"
-    [(ngModel)]="saleCode"
-    (keyup.enter)="buscarVenta()"
-    (focus)="mostrarHistorial = true"
-    (blur)="ocultarHistorialConDelay()"
-    placeholder="Buscar por código de venta..."
-    autocomplete="off"
-  />
-  <ul *ngIf="mostrarHistorial" class="historial">
-    <li *ngFor="let item of historialBusqueda" (mousedown)="usarHistorial(item)">
-      {{ item }}
-    </li>
-  </ul>
-</div> -->
+    <button (click)="limpiarBusqueda()">Limpiar</button>
 
     <div class="search-wrapper">
       <input
@@ -61,11 +40,9 @@
         </li>
       </ul>
     </div>
-
-    <button (click)="limpiarBusqueda()">Limpiar</button>
   </div>
 
-  <div class="actions">
+  <!-- <div class="actions">
     <div class="action-card" (click)="abrirModalAgregar()">
       <span>Agregar Producto</span>
     </div>
@@ -101,8 +78,203 @@
         <span>Aprobar Ventas</span>
       </div>
     </div>
+  </div> -->
+
+  <div class="actions">
+    <!-- Filtro Tipo Producto -->
+    <div class="dropdown">
+      <button class="dropdown-toggle">
+        {{ selectedTipo2?.nombreTipo || "Selecciona Tipo" }}
+      </button>
+      <div class="dropdown-menu">
+        <a
+          href="#"
+          class="dropdown-item"
+          (click)="selectTipo2(null); $event.preventDefault()"
+        >
+          Todas
+        </a>
+        <a
+          href="#"
+          class="dropdown-item"
+          *ngFor="let tipo of TipoProducto"
+          (click)="selectTipo2(tipo); $event.preventDefault()"
+        >
+          {{ tipo.nombreTipo }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Filtro Subtipo Producto -->
+    <div class="dropdown">
+      <button class="dropdown-toggle">
+        {{ selectedSubproducto2?.nombreSubtipo || "Selecciona Subtipo" }}
+      </button>
+      <div class="dropdown-menu">
+        <a
+          href="#"
+          class="dropdown-item"
+          (click)="selectSubproducto2(null); $event.preventDefault()"
+        >
+          Todas
+        </a>
+        <a
+          href="#"
+          class="dropdown-item"
+          *ngFor="let subtipo of TipoSubproducto"
+          (click)="selectSubproducto2(subtipo); $event.preventDefault()"
+        >
+          {{ subtipo.nombreSubtipo }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Menú hamburguesa -->
+    <div class="hamburger-menu">
+      <button class="hamburger-btn" (click)="toggleMenu()">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <div class="menu-content" [ngClass]="{ 'menu-open': menuOpen }">
+        <a
+          href="#"
+          class="menu-item"
+          (click)="abrirModalAgregar(); $event.preventDefault()"
+        >
+          Agregar Producto
+        </a>
+        <a
+          href="#"
+          class="menu-item"
+          *ngIf="userRole === '1'"
+          (click)="abrirModalAgregarEmpleado(); $event.preventDefault()"
+        >
+          Agregar Empleado
+        </a>
+        <a
+          href="#"
+          class="menu-item"
+          *ngIf="userRole === '1'"
+          (click)="abrirModalAdministrarEmpleados(); $event.preventDefault()"
+        >
+          Administrar Empleados
+        </a>
+        <a
+          href="#"
+          class="menu-item"
+          *ngIf="userRole === '1'"
+          (click)="abrirModal(); $event.preventDefault()"
+        >
+          Ver Estadísticas
+        </a>
+        <a
+          href="#"
+          class="menu-item"
+          (click)="abrirModalVentas(); $event.preventDefault()"
+        >
+          Ver Ventas
+        </a>
+        <a
+          href="#"
+          class="menu-item"
+          *ngIf="userRole === '1'"
+          (click)="abrirModalVentasPorAprobar(); $event.preventDefault()"
+        >
+          Aprobar Ventas
+        </a>
+        <a
+          href="#"
+          class="menu-item"
+          (click)="loadSalesHistory(); $event.preventDefault()"
+        >
+          Pedidos Pendientes
+        </a>
+      </div>
+    </div>
+
   </div>
 
+  <!-- Filtro Tipo Producto -->
+  <!-- <div class="dropdown">
+  <button class="dropdown-toggle">
+    {{ selectedTipo2?.nombreTipo || 'Selecciona Tipo' }}
+  </button>
+  <div class="dropdown-menu">
+    <a
+      href="#"
+      class="dropdown-item"
+      (click)="selectTipo2(null); $event.preventDefault()"
+    >
+      Todas
+    </a>
+    <a
+      href="#"
+      class="dropdown-item"
+      *ngFor="let tipo of TipoProducto"
+      (click)="selectTipo2(tipo); $event.preventDefault()"
+    >
+      {{ tipo.nombreTipo }}
+    </a>
+  </div>
+</div> -->
+
+  <!-- Filtro Subtipo Producto -->
+  <!-- <div class="dropdown">
+  <button class="dropdown-toggle">
+    {{ selectedSubproducto2?.nombreSubtipo || 'Selecciona Subtipo' }}
+  </button>
+  <div class="dropdown-menu">
+    <a
+      href="#"
+      class="dropdown-item"
+      (click)="selectSubproducto2(null); $event.preventDefault()"
+    >
+      Todas
+    </a>
+    <a
+      href="#"
+      class="dropdown-item"
+      *ngFor="let subtipo of TipoSubproducto"
+      (click)="selectSubproducto2(subtipo); $event.preventDefault()"
+    >
+      {{ subtipo.nombreSubtipo }}
+    </a>
+  </div>
+</div> -->
+
+  <!-- <div class="product-grid">
+    <div
+      class="product-card"
+      *ngFor="let producto of productosFiltrados"
+      (click)="seleccionarProducto(producto)"
+    >
+      <img
+        [src]="obtenerImagenDeProducto(producto.idProducto)"
+        alt="{{ producto.nombre }}"
+        class="product-image"
+      />
+      <div class="product-info">
+        <h3>{{ producto.nombre }}</h3>
+        <p>Precio: ${{ producto.precio }}</p>
+        <p>Stock: {{ producto.stock }}</p>
+        <button class="edit-btn" (click)="abrirModalEditar(producto)">
+          Editar
+        </button>
+        <div
+          class="product-actions"
+          *ngIf="userRole === '1'"
+          (click)="$event.stopPropagation()"
+        >
+          <button class="delete-btn" (click)="confirmarEliminar(producto)">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- Lista de productos -->
   <div class="product-grid">
     <div
       class="product-card"
@@ -118,6 +290,9 @@
         <h3>{{ producto.nombre }}</h3>
         <p>Precio: ${{ producto.precio }}</p>
         <p>Stock: {{ producto.stock }}</p>
+        <button class="edit-btn" (click)="abrirModalVender(producto)">
+          Vender
+        </button>
         <button class="edit-btn" (click)="abrirModalEditar(producto)">
           Editar
         </button>
@@ -356,191 +531,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Modal para añadir empleado -->
-  <!-- <div
-    class="modal add-employee"
-    *ngIf="showAddEmployeeModal"
-    (click)="cerrarModalAgregarEmpleado()"
-  >
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Agregar Empleado</h2>
-        <button class="modal-close" (click)="cerrarModalAgregarEmpleado()">
-          ✖
-        </button>
-      </div>
-      <div class="modal-body">
-        <form [formGroup]="empleadoForm" (ngSubmit)="guardarNuevoEmpleado()">
-          <div class="form-group">
-            <label>Nombres:</label>
-            <input
-              type="text"
-              formControlName="Nombres"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('Nombres')?.invalid &&
-                  empleadoForm.get('Nombres')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                empleadoForm.get('Nombres')?.invalid &&
-                empleadoForm.get('Nombres')?.touched
-              "
-              class="error-message"
-            >
-              El nombre es requerido y solo puede contener letras y espacios.
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Apellidos:</label>
-            <input
-              type="text"
-              formControlName="Apellidos"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('Apellidos')?.invalid &&
-                  empleadoForm.get('Apellidos')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                empleadoForm.get('Apellidos')?.invalid &&
-                empleadoForm.get('Apellidos')?.touched
-              "
-              class="error-message"
-            >
-              El apellido es requerido y solo puede contener letras y espacios.
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Cédula:</label>
-            <input
-              type="text"
-              formControlName="Cedula"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('Cedula')?.invalid &&
-                  empleadoForm.get('Cedula')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                empleadoForm.get('Cedula')?.invalid &&
-                empleadoForm.get('Cedula')?.touched
-              "
-              class="error-message"
-            >
-              La cédula debe tener exactamente 10 dígitos.
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Fecha de Nacimiento:</label>
-            <input
-              type="date"
-              formControlName="FechaNacimiento"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('FechaNacimiento')?.invalid &&
-                  empleadoForm.get('FechaNacimiento')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                empleadoForm.get('FechaNacimiento')?.invalid &&
-                empleadoForm.get('FechaNacimiento')?.touched
-              "
-              class="error-message"
-            >
-              La fecha de nacimiento es requerida.
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Género:</label>
-            <select
-              formControlName="Genero"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('Genero')?.invalid &&
-                  empleadoForm.get('Genero')?.touched
-              }"
-            >
-              <option value="" disabled>Selecciona Género</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
-              <option value="Otro">Otro</option>
-            </select>
-            <div
-              *ngIf="
-                empleadoForm.get('Genero')?.invalid &&
-                empleadoForm.get('Genero')?.touched
-              "
-              class="error-message"
-            >
-              El género es requerido.
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Teléfono:</label>
-            <input
-              type="tel"
-              formControlName="Telefono"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('Telefono')?.invalid &&
-                  empleadoForm.get('Telefono')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                empleadoForm.get('Telefono')?.invalid &&
-                empleadoForm.get('Telefono')?.touched
-              "
-              class="error-message"
-            >
-              El teléfono debe tener 10 dígitos.
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Contraseña:</label>
-            <input
-              type="password"
-              formControlName="contrasenia"
-              class="form-control"
-              [ngClass]="{
-                invalid:
-                  empleadoForm.get('contrasenia')?.invalid &&
-                  empleadoForm.get('contrasenia')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                empleadoForm.get('contrasenia')?.invalid &&
-                empleadoForm.get('contrasenia')?.touched
-              "
-              class="error-message"
-            >
-              La contraseña es requerida y debe tener al menos 6 caracteres.
-            </div>
-          </div>
-          <button
-            type="submit"
-            class="save-btn"
-            [disabled]="empleadoForm.invalid"
-          >
-            Guardar
-          </button>
-        </form>
-      </div>
-    </div>
-  </div> -->
 
   <div
     class="modal add-employee"
@@ -881,21 +871,33 @@
           <p><strong>Cédula:</strong> {{ saleDetails.cedulaCliente }}</p>
           <p><strong>Observaciones:</strong> {{ saleDetails.observaciones }}</p>
           <!-- Indicador de carga -->
-          <div *ngIf="isGeneratingPDF" class="loading-bar">
+          <!-- <div *ngIf="isGeneratingPDF" class="loading-bar">
             <div class="spinner"></div>
-            <span>Generando PDF...</span>
-          </div>
+            <span>Generando PDF...\nPor favor espere</span>
+          </div> -->
           <div class="modal-actions">
             <button class="cancel-btn" (click)="cerrarModalSaleDetails()">
               Cerrar
             </button>
-            <button class="save-btn" (click)="generarOrdenPago()">
+            <!-- <button class="save-btn" disabled (click)="generarOrdenPago()">
+              Generar Orden de Pago
+            </button> -->
+            <button
+              class="save-btn"
+              [disabled]="isGeneratingPDF"
+              (click)="generarOrdenPago()"
+            >
               Generar Orden de Pago
             </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <div *ngIf="isGeneratingPDF" class="loading-bar">
+    <div class="spinner"></div>
+    <span>Generando PDF...\nPor favor espere</span>
   </div>
 
   <!-- Modal para añadir descuento a empleado -->
@@ -1352,20 +1354,6 @@
         </div>
 
         <!-- Imagen del comprobante -->
-        <!-- <div class="section">
-          <h3>Comprobante</h3>
-          <div *ngIf="filteredApprovalVentas[currentApprovalIndex].imagenBase64" class="image-preview">
-            <img 
-              [src]="'data:image/jpeg;base64,' + filteredApprovalVentas[currentApprovalIndex].imagenBase64"
-              alt="Comprobante de venta"
-            />
-          </div>
-          <div *ngIf="!filteredApprovalVentas[currentApprovalIndex].imagenBase64" class="no-image">
-            No hay imagen disponible.
-          </div>
-        </div> -->
-
-        <!-- Imagen del comprobante -->
         <div class="section">
           <h3>Comprobante</h3>
           <div
@@ -1453,3 +1441,132 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para historial de ventas -->
+<div
+  class="modal sales-history"
+  *ngIf="showSalesHistoryModal"
+  (click)="cerrarSalesHistoryModal()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>MIS VENTAS</h2>
+      <button class="modal-close" (click)="cerrarSalesHistoryModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="sales-table" *ngIf="sales.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Venta</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Total</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sale of sales">
+              <td>{{ sale.idVenta }}</td>
+              <td>{{ sale.nombreProducto }}</td>
+              <td>{{ sale.cantidad }}</td>
+              <td>${{ sale.precioTotal | number : "1.2-2" }}</td>
+              <td>{{ sale.fecha | date : "yyyy-MM-dd" }}</td>
+              <td>{{ sale.estado }}</td>
+              <td>
+                <button
+                  class="process-btn"
+                  (click)="procesarVenta(sale.idVenta)"
+                >
+                  Procesar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div *ngIf="sales.length === 0" class="no-data">
+        No se encontraron ventas.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal para vender producto -->
+  <div
+    class="modal sell-product"
+    *ngIf="showSellProductModal"
+    (click)="cerrarModalSellProduct()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Vender Producto</h2>
+        <button class="modal-close" (click)="cerrarModalSellProduct()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="sellErrorMessage" class="error-message">
+          {{ sellErrorMessage }}
+        </div>
+        <div *ngIf="selectedProducto">
+          <p><strong>Producto:</strong> {{ selectedProducto.nombre }}</p>
+          <p>
+            <strong>Descripción:</strong>
+            {{ selectedProducto.descripcion || 'N/A' }}
+          </p>
+          <p>
+            <strong>Precio Unitario:</strong> ${{ selectedProducto.precio | number: '1.2-2' }}
+          </p>
+          <div class="form-group">
+            <label><strong>Cantidad:</strong></label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="sellCantidad"
+              (ngModelChange)="onQuantityOrDiscountChange2($event, 'quantity')"
+              min="1"
+              step="1"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Descuento (%):</label>
+            <select
+              id="descuento"
+              class="form-control discount-select"
+              [ngModel]="selectedDescuento"
+              (ngModelChange)="onQuantityOrDiscountChange2($event, 'discount')"
+            >
+              <option [value]="0">0</option>
+              <option *ngFor="let descuento of descuentos" [value]="descuento">
+                {{ descuento }}
+              </option>
+            </select>
+          </div>
+          <p>
+            <strong>Subtotal (con descuento):</strong> ${{ computeDiscountedSubtotal2() | number: '1.2-2' }}
+          </p>
+          <p>
+            <strong>IVA (15%):</strong> ${{ computeTaxAmount2() | number: '1.2-2' }}
+          </p>
+          <p>
+            <strong>Total (con IVA):</strong> ${{ computeFinalTotal2() | number: '1.2-2' }}
+          </p>
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="cerrarModalSellProduct()">
+            Cerrar
+          </button>
+          <button
+            class="save-btn"
+            [disabled]="isProcessingSale"
+            (click)="confirmarVenta()"
+          >
+            Confirmar Venta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

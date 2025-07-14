@@ -78,8 +78,10 @@ export class ProductosService {
     return this.http.post(`${this.myAppUrl}${this.myApiUrl3}`, formData);
   }
 
+  //https://localhost:7077/api/Imagen/23
   eliminarImagen(idImagen: number): Observable<any> {
-    return this.http.get(`${this.myAppUrl}${this.myApiUrlImage}/${idImagen}`);
+    console.log('Eliminando imagen con ruta:', `${this.myAppUrl}${this.myApiUrlImage}/${idImagen}`);
+    return this.http.delete(`${this.myAppUrl}${this.myApiUrlImage}/${idImagen}`);
   }
 
   getProductosBajoStock(): Observable<any> {

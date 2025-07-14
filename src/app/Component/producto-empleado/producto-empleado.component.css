@@ -157,6 +157,7 @@
 
 .edit-btn,
 .delete-btn {
+
   width: 100%;
   padding: 8px;
   border: none;
@@ -167,6 +168,7 @@
 }
 
 .edit-btn {
+  margin-top: 5px;
   background-color: #f1c40f;
   color: white;
 }
@@ -974,6 +976,8 @@ ng-select .ng-select-container {
   margin: 0;
   overflow-y: scroll;
   overflow-x: hidden;
+  z-index: 1000; 
+
 }
 .historial li {
   padding: 8px;
@@ -982,6 +986,285 @@ ng-select .ng-select-container {
 .historial li:hover {
   background-color: #eee;
 }
+
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 30, 30, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #ccc;
+  border-top: 6px solid #00c6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-bar span {
+  animation: pulseText 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+
+/* Contenedor de los filtros */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+  min-width: 200px;
+}
+
+.dropdown-toggle {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-toggle:hover {
+  background-color: #0056b3;
+}
+
+.dropdown-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  min-width: 100%;
+  z-index: 1000;
+  display: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Estilos para el menú hamburguesa */
+/* Estilos generales */
+.hamburger-menu {
+  margin-top: -10px;
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.hamburger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 48px; /*  altura del botón */
+  width: 55px;  /*  ancho del botón */
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 5px; /*  grosor de la línea */
+  background-color: #000; /* Más visible: negro */
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Contenedor del menú */
+.menu-content {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 200px;
+  padding: 15px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+/* Menú abierto */
+.menu-content.menu-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Ítems del menú */
+.menu-item {
+  display: block;
+  padding: 12px 20px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+/* Estilos para el modal de historial de ventas */
+.modal.sales-history {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Estilos para la tabla de ventas */
+.sales-table {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+td {
+  font-size: 14px;
+  color: #333;
+}
+
+tr:hover {
+  background-color: #f0f0f0;
+}
+
+.process-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.process-btn:hover {
+  background-color: #0056b3;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  padding: 20px;
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -1153,4 +1436,32 @@ ng-select .ng-select-container {
     font-size: 14px;
     text-align: center;
   }
+
+  .menu-content {
+    width: 100vw;
+    right: 0;
+    left: 0;
+    top: 50px;
+    border-radius: 0;
+  }
+
+  .menu-item {
+    text-align: center;
+  }
+
+   th, td {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .process-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .open-history-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
 }

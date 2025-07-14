@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { ProductosService } from '../../Service/productos.service';
 import { CommonModule } from '@angular/common';
 import {
@@ -30,6 +30,7 @@ import {
 import { VentaService } from '../../Service/venta.service';
 import { Chart } from 'chart.js/auto';
 import { FilterByMonthPipe } from '../Pipes/FilterByMonthPipe';
+import { IngresarVentaRequest } from '../../Model/ingresar-venta-request';
 
 @Component({
   selector: 'app-producto-empleado',
@@ -204,6 +205,7 @@ export class ProductoEmpleadoComponent {
     this.obtenerProductosBajoStock();
     this.buscarVentasPorAprobar();
     this.cargarHistorialBusqueda();
+    this.filtrar();
   }
 
   obtenerDescuentos() {
@@ -271,6 +273,7 @@ calcularIva15(): number {
       next: (response: any) => {
         this.productos = response.data.map((p: any) => ({ ...p }));
         this.productosFiltrados = [...this.productos];
+        this.filtrar();
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
@@ -501,6 +504,7 @@ calcularIva15(): number {
         );
         this.cerrarModalEditar();
         alert('Producto actualizado exitosamente.');
+        this.ngOnInit();
       },
       error: (error) => {
         console.error('Error al actualizar producto:', error);
@@ -660,6 +664,7 @@ calcularIva15(): number {
           this.cerrarModalAgregar();
           this.obtenerProductos();
         }
+        this.ngOnInit();
       },
       error: (error) => {
         console.error('Error al crear producto:', error);
@@ -672,50 +677,6 @@ calcularIva15(): number {
     this.empleadoForm.reset();
     this.showAddEmployeeModal = true;
   }
-
-  // cerrarModalAgregarEmpleado(): void {
-  //   this.showAddEmployeeModal = false;
-  //   this.empleadoForm.reset();
-  // }
-
-  // guardarNuevoEmpleado(): void {
-  //   if (this.empleadoForm.invalid) {
-  //     this.empleadoForm.markAllAsTouched();
-  //     alert('Por favor, completa correctamente todos los campos requeridos.');
-  //     return;
-  //   }
-
-  //   const empleadoRequest: EmpleadoRequest = {
-  //     Nombres: this.empleadoForm.value.Nombres,
-  //     Apellidos: this.empleadoForm.value.Apellidos,
-  //     Cedula: this.empleadoForm.value.Cedula,
-  //     FechaNacimiento: this.empleadoForm.value.FechaNacimiento,
-  //     Genero: this.empleadoForm.value.Genero,
-  //     Telefono: this.empleadoForm.value.Telefono,
-  //     contrasenia: this.empleadoForm.value.contrasenia,
-  //   };
-
-  //   console.log('Enviando empleado:', JSON.stringify(empleadoRequest, null, 2));
-
-  //   this.loginService.registrarEmpleado(empleadoRequest).subscribe({
-  //     next: (response: any) => {
-  //       alert('Empleado registrado exitosamente.');
-  //       this.cerrarModalAgregarEmpleado();
-  //       this.obtenerEmpleados(); // Refresh employee list
-  //     },
-  //     error: (error) => {
-  //       console.error('Error al registrar empleado:', error);
-  //       if (error.error && error.error.errors) {
-  //         const errorMessages = Object.values(error.error.errors)
-  //           .flat()
-  //           .join('\n');
-  //         alert(`Error al registrar el empleado:\n${errorMessages}`);
-  //       } else {
-  //         alert('Error al registrar el empleado. Por favor, intenta de nuevo.');
-  //       }
-  //     },
-  //   });
-  // }
 
 
   onImageSelected(event: Event): void {
@@ -795,6 +756,7 @@ calcularIva15(): number {
         } else {
           this.finalizarGuardado();
         }
+        this.ngOnInit();
       },
       error: (error) => {
         console.error('Error al registrar empleado:', error);
@@ -990,10 +952,6 @@ private finalizarGuardado(): void {
     const subtotalSinIVA = this.calcularSubtotalSinIVA(precioTotalConIVA);
     return precioTotalConIVA - subtotalSinIVA;
   }
-
-
-
-
 
 
   calcularPrecioTotalConDescuento(): number {
@@ -1432,6 +1390,7 @@ window.open(whatsappUrl, '_blank');
         this.filteredVentas = this.filteredVentas.map((v: any) =>
           v.code === code ? { ...v, estadoEntrega: this.saleStatus[code] } : v
         );
+        this.ngOnInit();
       },
       error: (error) => {
         console.error('Error al actualizar el estado de la venta:', error);
@@ -1570,6 +1529,7 @@ window.open(whatsappUrl, '_blank');
         } else {
           alert('Error en la respuesta del servidor: ' + response.Message);
         }
+        this.ngOnInit();
       },
       error: (error) => {
         console.error('Error al actualizar el estado de la venta:', error);
@@ -1633,25 +1593,25 @@ historialBusqueda: string[] = [];
 mostrarHistorial = false;
 
  cargarHistorialBusqueda(): void {
-    this.ventaService.getVentasIdsBase64().subscribe({
-      next: (response) => {
-        if (response.data) {
-          this.historialBusqueda = response.data; 
-          console.log('Historial de búsqueda cargado:', this.historialBusqueda);
-        } else {
-          this.historialBusqueda = [];
-          this.saleDetailsError = response.message || 'No se pudieron cargar los códigos de venta';
-        }
-      },
-      error: (err) => {
+  this.ventaService.getVentasIdsBase64().subscribe({
+    next: (response) => {
+      if (response.data) {
+        this.historialBusqueda = response.data; 
+        console.log('Historial de búsqueda cargado:', this.historialBusqueda);
+      } else {
         this.historialBusqueda = [];
-        this.saleDetailsError = 'Error al cargar los códigos de venta: ' + err.message;
+        this.saleDetailsError = response.message || 'No se pudieron cargar los códigos de venta';
       }
-    });
-  }
+    },
+    error: (err) => {
+      this.historialBusqueda = [];
+      this.saleDetailsError = 'Error al cargar los códigos de venta: ' + err.message;
+    }
+  });
+}
 
-  usarHistorial(item: string) {
-  this.saleCode = item;
+ usarHistorial(item: string) {
+  this.saleCode = item.split('|')[0]; 
   this.buscarVenta();
   this.mostrarHistorial = false;
 }
@@ -1676,6 +1636,198 @@ enlargeImage(base64: string): void {
     this.showEnlargedImage = false;
     this.enlargedImageBase64 = '';
   }
+
+
+
+selectedTipo2: TipoProducto | null = null;
+selectedSubproducto2: TipoSubproducto | null = null;
+
+
+  selectTipo2(tipo: TipoProducto | null): void {
+    this.selectedTipo2 = tipo;
+    this.filtrar();
+  }
+
+  selectSubproducto2(subtipo: TipoSubproducto | null): void {
+    this.selectedSubproducto2 = subtipo;
+    this.filtrar();
+  }
+
+  filtrar(): void {
+    let productosFiltrados = [...this.productos];
+
+    // Filtrar por tipo si no es "Todas" (null)
+    if (this.selectedTipo2) {
+      productosFiltrados = productosFiltrados.filter(
+        (p: Producto) => p.idTipoProducto === this.selectedTipo2!.idTipoProducto
+      );
+    }
+
+    // Filtrar por subtipo si no es "Todas" (null)
+    if (this.selectedSubproducto2) {
+      productosFiltrados = productosFiltrados.filter(
+        (p: Producto) => p.idTipoSubproducto === this.selectedSubproducto2!.idTipoSubproducto
+      );
+    }
+
+    this.productosFiltrados = productosFiltrados;
+  }
+
+
+   menuOpen: boolean = false;
+    toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+
+  sales: any[] = [];
+  errorMessage: string = '';
+  showSalesHistoryModal: boolean = false;
+
+
+  loadSalesHistory(): void {
+    const clienteData = localStorage.getItem('cedula');
+    if (clienteData) {
+      this.ventaService.getventasxVendedor(clienteData).subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.sales = response.data;
+            console.log('Historial de ventas cargado:', this.sales);
+            this.errorMessage = '';
+            this.showSalesHistoryModal = true; // Abrir modal al cargar datos
+          } else {
+            this.sales = [];
+            this.errorMessage =
+              response.error || 'No se encontraron ventas para este cliente';
+            this.showSalesHistoryModal = true; // Abrir modal incluso si no hay datos
+          }
+        },
+        error: (err) => {
+          this.sales = [];
+          this.errorMessage =
+            'Error al cargar el historial de ventas: ' + err.message;
+          this.showSalesHistoryModal = true; // Abrir modal para mostrar error
+        },
+      });
+    } else {
+      this.sales = [];
+      this.errorMessage = 'No hay datos de venta.';
+      this.showSalesHistoryModal = true; // Abrir modal para mostrar error
+    }
+  }
+
+  openSalesHistoryModal(): void {
+    this.showSalesHistoryModal = true;
+  }
+
+  cerrarSalesHistoryModal(): void {
+    this.showSalesHistoryModal = false;
+  }
+
+  procesarVenta(idVenta: number): void {
+    // Convertir idVenta a Base64
+    this.cerrarSalesHistoryModal()
+    this.saleCode = btoa(idVenta.toString());
+    console.log('Código de venta en Base64:', this.saleCode);
+    this.buscarVenta();
+  }
+
+  selectedProducto: Producto | null = null;
+  sellCantidad: number = 1;
+  sellErrorMessage: string | null = null;
+  isProcessingSale: boolean = false;
+  showSellProductModal: boolean = false;
+
+  abrirModalVender(producto: Producto): void {
+    this.selectedProducto = producto;
+    this.sellCantidad = 1;
+    this.selectedDescuento = 0;
+    this.sellErrorMessage = null;
+    this.showSellProductModal = true;
+  }
+
+  cerrarModalSellProduct(): void {
+    this.showSellProductModal = false;
+    this.selectedProducto = null;
+    this.sellCantidad = 1;
+    this.selectedDescuento = 0;
+    this.sellErrorMessage = null;
+  }
+
+
+  onQuantityOrDiscountChange2(value: any, type: string): void {
+    if (type === 'quantity') {
+      this.sellCantidad = value;
+    } else if (type === 'discount') {
+      this.selectedDescuento = value;
+    }
+  }
+
+  computeDiscountedSubtotal2(): number {
+    if (!this.selectedProducto || !this.sellCantidad) return 0;
+    const subtotal = this.selectedProducto.precio * this.sellCantidad;
+    return subtotal * (1 - (this.selectedDescuento ?? 0) / 100);
+  }
+
+  computeTaxAmount2(): number {
+    return this.computeDiscountedSubtotal2() * 0.15;
+  }
+
+  computeFinalTotal2(): number {
+    return this.computeDiscountedSubtotal2() + this.computeTaxAmount2();
+  }
+
+
+
+
+  confirmarVenta(): void {
+    if (!this.selectedProducto || this.sellCantidad < 1) {
+      this.sellErrorMessage = 'Por favor, ingrese una cantidad válida.';
+      return;
+    }
+
+    if (this.sellCantidad > this.selectedProducto.stock) {
+      this.sellErrorMessage = 'La cantidad excede el stock disponible.';
+      return;
+    }
+
+    this.isProcessingSale = true;
+    const cedulaEmpleado = localStorage.getItem('cedula') || '';
+    const now = new Date();
+    const fecha = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hora = now.toTimeString().slice(0, 5); // HH:MM
+
+    const request: IngresarVentaRequest = {
+      cedulaCliente: '0000000000',
+      cedulaEmpleado,
+      fecha,
+      hora,
+      idProducto: this.selectedProducto.idProducto,
+      precioUnitario: this.selectedProducto.precio,
+      cantidad: this.sellCantidad,
+      precioTotal: this.selectedProducto.precio * this.sellCantidad,
+      estado: 'COMPLETADA',
+      descuento: this.selectedDescuento || 0
+    };
+
+    this.ventaService.ingresarVentaEmpleado(request).subscribe({
+      next: (response) => {
+        this.isProcessingSale = false;
+        this.cerrarModalSellProduct();
+        this.ngOnInit();
+      },
+      error: (error) => {
+        this.isProcessingSale = false;
+        this.sellErrorMessage = error.error?.message || 'Error al registrar la venta.';
+      }
+    });
+  }
+
+
+
+
+
+
   
 
 }
